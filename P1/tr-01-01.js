@@ -4,12 +4,12 @@
 // these two things are the main UI code for the train
 // students learned about them in last week's workbook
 
-import { draggablePoints } from "./libs/CS559/dragPoints.js";
-import { RunCanvas } from "./libs/CS559/runCanvas.js";
+import { draggablePoints } from "./p1libs/dragPoints.js";
+import { RunCanvas } from "./p1libs/runCanvas.js";
 
 // this is a utility that adds a checkbox to the page 
 // useful for turning features on and off
-import { makeCheckbox } from "./libs/CS559/inputHelpers.js";
+import { makeCheckbox } from "./p1libs/inputHelpers.js";
 
 /**
  * Have the array of control points for the track be a
