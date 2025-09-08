@@ -14,7 +14,6 @@ let alignmentSlider = /** @type {HTMLInputElement} */ (document.getElementById("
 let separationSlider = /** @type {HTMLInputElement} */ (document.getElementById("separation"));
 let cohesionSlider = /** @type {HTMLInputElement} */ (document.getElementById("cohesion"));
 let distanceSlider = /** @type {HTMLInputElement} */ (document.getElementById("dist"));
-let mouseAttractionSlider = /** @type {HTMLInputElement} */ (document.getElementById("mouse"));
 
 const textureLoader = new T.TextureLoader();
 const objLoader = new OBJLoader();
@@ -409,6 +408,7 @@ export class Alien extends GrObject{
 
 let cowTex = textureLoader.load("./assets/spot_texture.png");
 let cowObj = await objLoader.loadAsync("./assets/spot_triangulated.obj");
+let cowObj2 = await objLoader.loadAsync("./assets/spot_triangulated.obj");
 
 cowObj.traverse(function (child) {
     if (child instanceof T.Mesh) {
@@ -416,10 +416,18 @@ cowObj.traverse(function (child) {
     }
 } );
 
+let auraMat = new T.MeshStandardMaterial({color: 0xff0000});
+cowObj2.traverse(function (child) {
+    if (child instanceof T.Mesh) {
+        child.material = auraMat;
+    }
+} );
+
+let flashTime = 500;
 let cowCount = 0;
 export class Cow extends GrObject{
-    constructor(xpos, zpos, theta){ 
-        let center = new T.Vector3(10.5, 0 ,-1);
+    constructor(xpos, zpos, theta, index){ 
+        let center = new T.Vector3(10.5, 0 ,-2);
         
         let cowmodel = cowObj.clone(); 
         let cow = new T.Group();
@@ -428,19 +436,37 @@ export class Cow extends GrObject{
         cowmodel.position.set(0,.22,0);
         cowmodel.rotateY(Math.PI);
 
+        let cowAura = cowObj2.clone();
+        cow.add(cowAura);
+        cowAura.scale.set(.35,.35,.35);
+        cowAura.position.set(0,.21,0);
+        cowAura.rotateY(Math.PI);
+        cowAura.visible = false;
+
         super(`Cow-${++cowCount}`, cow);
 
         cow.position.set(xpos + center.x, 0 ,zpos + center.z);
         cow.rotateY(theta);
 
+        let ctimer = 0;
+
+        this.ctimer = ctimer;
         this.cow = cow;
+        this.aura = cowAura;
+        this.friends = [];
+        this.index = index;
 
         this.ridePoint = new T.Object3D();
         this.ridePoint.translateY(.7);
         this.cow.add(this.ridePoint);
         this.rideable = this.ridePoint;
     }
+    setFriends(friends){
+        this.friends = friends;
+    }
     stepWorld(delta){
+        let speed = Number(speedSlider.value);
+
         // random boid steering
         let currentVec = new T.Vector3();
         this.cow.getWorldDirection(currentVec);
@@ -453,25 +479,49 @@ export class Cow extends GrObject{
         }
 
         // stay in bounds (placeholder)
-        let center = new T.Vector3(10.5, 0 ,-1);
+        let center = new T.Vector3(10.5, 0 ,-2);
         let relx = this.cow.position.x - center.x;
         let relz = this.cow.position.z - center.z;
         if (relx < -8){
-            this.cow.position.set(center.x,center.y,center.z);
+            this.cow.position.set(center.x - 8, 0, this.cow.position.z);
+            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+            this.ctimer = flashTime;
         }
         if (relx > 8){
-            this.cow.position.set(center.x,center.y,center.z);
+            this.cow.position.set(center.x + 8, 0, this.cow.position.z);
+            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+            this.ctimer = flashTime;
         }
         if (relz < -8){
-            this.cow.position.set(center.x,center.y,center.z);
+            this.cow.position.set(this.cow.position.x, 0, center.z - 8);
+            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+            this.ctimer = flashTime;
         }
         if (relz > 8){
-            this.cow.position.set(center.x,center.y,center.z);
+            this.cow.position.set(this.cow.position.x, 0, center.z + 8);
+            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+            this.ctimer = flashTime;
+        }
+
+        let cowsize = .25;
+        for (let i = 0; i < this.friends.length; i++){
+            if (i !== this.index){
+                if ((Math.abs(this.cow.position.x-this.friends[i].cow.position.x) <= cowsize)&&(Math.abs(this.cow.position.z-this.friends[i].cow.position.z) <= cowsize)){
+                    this.ctimer = flashTime;
+                }
+            }
         }
 
         // move the boid
-        let speed = Number(speedSlider.value);
         this.cow.translateZ(delta/5000 * speed);
+        this.ctimer -= delta;
+
+        if(this.ctimer > 0){
+            this.aura.visible = true;
+        } else {
+            this.aura.visible = false;
+        }
+
     }
 }
 

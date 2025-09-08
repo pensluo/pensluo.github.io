@@ -108,14 +108,17 @@ world.add(saucer2);
 saucer2.setPos(-9.5,0,-9.5);
 
 //cows here
+let cows = [];
 for (let i = 0; i < 30; i++){
   let x = 16*Math.random()-8;
   let z = 16*Math.random()-8;
-  console.log(x);
-  console.log(z);
   let theta = 2*Math.PI*Math.random();
-  let cow = new Cow(x,z,theta);
+  let cow = new Cow(x,z,theta,i);
   world.add(cow);
+  cows.push(cow);
+}
+for (let i = 0; i < cows.length; i++){
+  cows[i].setFriends(cows);
 }
 
 let silo1 = new Silo(1);
