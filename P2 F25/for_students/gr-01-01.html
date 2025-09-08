@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../libs/CS559/style559.css" />
+  </head>
+
+  <body>
+    <div id="div1"></div>
+<script type="importmap">
+      {
+          "imports": {
+              "three": "../libs/CS559-Three/build/three.module.js"
+          }
+      }
+  </script>
+    <script src="gr-01-01.js" type="module"></script>
+  <h3>Cow Behavior Controls</h3>
+    </br>
+    Raycast Collision (Will use bounding spheres otherwise)<input type="checkbox" id="collisionCheck">
+    </br>
+    Speed<input type="range" width="100px" min="0" max="6" step=".2" value="3" id="speed" />
+    </br>
+    Flocking Distance<input type="range" width="100px" min="0" max="100" step="5" value="50" id="dist" />
+    </br>
+    Alignment<input type="range" width="100px" min="0" max="10" step=".2" value="5" id="alignment" />
+    </br>
+    Separation<input type="range" width="100px" min="0" max="10" step=".2" value="3" id="separation" />
+    </br>
+    Cohesion<input type="range" width="100px" min="0" max="10" step=".2" value="0" id="cohesion" />
+    </br>
+    Mouse Attraction<input type="range" width="100px" min="0" max="10" step=".2" value="0" id="mouse" />
+    </br>
+  </body>
+</html>
+
