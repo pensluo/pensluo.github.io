@@ -478,7 +478,7 @@ export class Cow extends GrObject{
             this.cow.rotateOnWorldAxis(new T.Vector3(0,1,0),change);
         }
 
-        // stay in bounds (placeholder)
+        // stay in bounds
         let center = new T.Vector3(10.5, 0 ,-2);
         let relx = this.cow.position.x - center.x;
         let relz = this.cow.position.z - center.z;
@@ -503,14 +503,60 @@ export class Cow extends GrObject{
             this.ctimer = flashTime;
         }
 
+        let nearby = [];
         let cowsize = .25;
         for (let i = 0; i < this.friends.length; i++){
             if (i !== this.index){
-                if ((Math.abs(this.cow.position.x-this.friends[i].cow.position.x) <= cowsize)&&(Math.abs(this.cow.position.z-this.friends[i].cow.position.z) <= cowsize)){
+                let thisx = this.cow.position.x;
+                let thisz = this.cow.position.z;
+                let thatx = this.friends[i].cow.position.x;
+                let thatz = this.friends[i].cow.position.z;
+                if ((Math.abs(thisx-thatx) <= cowsize)&&(Math.abs(thisz-thatz) <= cowsize)){ 
+                    let xdir = thisx-thatx;
+                    let zdir = thisz-thatz;
+                    let angle = Math.atan2(xdir, zdir);
+                    this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
                     this.ctimer = flashTime;
+                }
+                // keep track of nearby boids that will influence steering
+                const distance = Number(distanceSlider.value);
+                if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance){
+                    nearby.push(this.friends[i]);
                 }
             }
         }
+        // boid alignment
+        let alignment = Number(alignmentSlider.value);
+        let avgxv = 0.0;
+        let avgzv = 0.0;
+        let dir = new T.Vector3();
+        let mydir = new T.Vector3();
+        this.cow.getWorldDirection(mydir);
+        nearby.forEach (function (boid){
+            boid.cow.getWorldDirection(dir);
+            avgxv += dir.x;
+            avgzv += dir.z;
+        });
+
+        if (nearby.length != 0){
+            avgxv = avgxv/nearby.length;
+            avgzv = avgzv/nearby.length;
+        } else {
+            dir = mydir;
+            avgxv = dir.x;
+            avgzv = dir.z;
+        }
+
+        let desiredAngle = Math.atan2(avgxv, avgzv);
+        currentAngle = Math.atan2(mydir.x,mydir.z);
+        let change;
+        if (Math.abs(desiredAngle-currentAngle) > Math.PI){
+            change = -alignment*(desiredAngle-currentAngle)/75;
+        } else {
+            change = alignment*(desiredAngle-currentAngle)/75;
+        }
+        currentAngle += change;
+        this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), currentAngle);
 
         // move the boid
         this.cow.translateZ(delta/5000 * speed);
