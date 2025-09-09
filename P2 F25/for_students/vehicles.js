@@ -504,6 +504,7 @@ export class Cow extends GrObject{
         }
 
         let nearby = [];
+        let verynearby = [];
         let cowsize = .25;
         for (let i = 0; i < this.friends.length; i++){
             if (i !== this.index){
@@ -523,8 +524,12 @@ export class Cow extends GrObject{
                 if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance){
                     nearby.push(this.friends[i]);
                 }
+                if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance/4){
+                    verynearby.push(this.friends[i]);
+                }
             }
         }
+
         // boid alignment
         let alignment = Number(alignmentSlider.value);
         let avgxv = 0.0;
@@ -557,6 +562,48 @@ export class Cow extends GrObject{
         }
         currentAngle += change;
         this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), currentAngle);
+
+        // boid separation (bugged)
+        let separation = Number(separationSlider.value);
+        let me = this.cow;
+        let thisx = me.position.x;
+        let thisz = me.position.z;
+        verynearby.forEach (function (boid){
+            let xdir = thisx - boid.cow.position.x;
+            let zdir = thisz - boid.cow.position.z;
+            let separationTheta = Math.atan2(xdir,zdir);
+            let separationAmt;
+            if (Math.abs(separationTheta-currentAngle) > Math.PI){
+                separationAmt = -separation*(separationTheta-currentAngle)/200;
+            } else {
+                separationAmt = separation*(separationTheta-currentAngle)/200;
+            }
+            currentAngle += separationAmt;
+            me.setRotationFromAxisAngle(new T.Vector3(0,1,0), currentAngle);
+        });
+
+        // boid cohesion
+        let cohesion = Number(cohesionSlider.value);
+        let avgx = 0;
+        let avgz = 0;
+        nearby.forEach (function (boid){
+            avgx += boid.cow.position.x;
+            avgz += boid.cow.position.y;
+        });
+
+        if (nearby.length != 0){
+            avgx = avgx/nearby.length;
+            avgz = avgz/nearby.length;
+            let cohesionAngle = Math.atan2(avgx-thisx, avgz-thisz);
+            let cohesionAmount;
+            if (Math.abs(cohesionAngle-currentAngle) > Math.PI){
+                cohesionAmount = -cohesion*(cohesionAngle-currentAngle)/100;
+            } else {
+                cohesionAmount = cohesion*(cohesionAngle-currentAngle)/100;
+            }
+            currentAngle += cohesionAmount;
+            me.setRotationFromAxisAngle(new T.Vector3(0,1,0), currentAngle);
+        }  
 
         // move the boid
         this.cow.translateZ(delta/5000 * speed);

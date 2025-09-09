@@ -109,7 +109,7 @@ saucer2.setPos(-9.5,0,-9.5);
 
 //cows here
 let cows = [];
-for (let i = 0; i < 30; i++){
+for (let i = 0; i < 50; i++){
   let x = 16*Math.random()-8;
   let z = 16*Math.random()-8;
   let theta = 2*Math.PI*Math.random();
