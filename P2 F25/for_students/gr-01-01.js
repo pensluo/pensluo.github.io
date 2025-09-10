@@ -17,7 +17,7 @@
 
 import { GrWorld } from "../libs/CS559-Framework/GrWorld.js";
 import { WorldUI } from "../libs/CS559-Framework/WorldUI.js";
-import { HippedHouse, GableHouse, Barn, Oak, Silo, Fence, WheatField, Road, Fireflies, Farmhouse, SmallRoad, SingleFence } from "./buildings.js";
+import { HippedHouse, GableHouse, Barn, Oak, Silo, Fence, WheatField, Road, Fireflies, Farmhouse, SmallRoad, SingleFence, Boundary } from "./buildings.js";
 import { Scooter, Saucer, Cow, Alien, AbductedCow, Car} from "./vehicles.js";
 import * as T from "../libs/CS559-Three/build/three.module.js";
 
@@ -106,6 +106,10 @@ saucer1.setPos(-3.5,6,-6.5); //10.5,6,-6.5
 let saucer2 = new Saucer(true, textureCube);
 world.add(saucer2);
 saucer2.setPos(-9.5,0,-9.5);
+
+let boundary = new Boundary();
+world.add(boundary);
+boundary.setPos(10.5,0,-2);
 
 //cows here
 let cows = [];

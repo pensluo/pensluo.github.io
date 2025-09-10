@@ -479,26 +479,27 @@ export class Cow extends GrObject{
         }
 
         // stay in bounds
+        const bound = 7.8;
         let center = new T.Vector3(10.5, 0 ,-2);
         let relx = this.cow.position.x - center.x;
         let relz = this.cow.position.z - center.z;
-        if (relx < -8){
-            this.cow.position.set(center.x - 8, 0, this.cow.position.z);
+        if (relx < -bound){
+            this.cow.position.set(center.x - bound, 0, this.cow.position.z);
             this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
             this.ctimer = flashTime;
         }
-        if (relx > 8){
-            this.cow.position.set(center.x + 8, 0, this.cow.position.z);
+        if (relx > bound){
+            this.cow.position.set(center.x + bound, 0, this.cow.position.z);
             this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
             this.ctimer = flashTime;
         }
-        if (relz < -8){
-            this.cow.position.set(this.cow.position.x, 0, center.z - 8);
+        if (relz < -bound){
+            this.cow.position.set(this.cow.position.x, 0, center.z - bound);
             this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
             this.ctimer = flashTime;
         }
-        if (relz > 8){
-            this.cow.position.set(this.cow.position.x, 0, center.z + 8);
+        if (relz > bound){
+            this.cow.position.set(this.cow.position.x, 0, center.z + bound);
             this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
             this.ctimer = flashTime;
         }
@@ -563,7 +564,7 @@ export class Cow extends GrObject{
         currentAngle += change;
         this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), currentAngle);
 
-        // boid separation (bugged)
+        // boid separation
         let separation = Number(separationSlider.value);
         let me = this.cow;
         let thisx = me.position.x;
