@@ -14,6 +14,7 @@ let alignmentSlider = /** @type {HTMLInputElement} */ (document.getElementById("
 let separationSlider = /** @type {HTMLInputElement} */ (document.getElementById("separation"));
 let cohesionSlider = /** @type {HTMLInputElement} */ (document.getElementById("cohesion"));
 let distanceSlider = /** @type {HTMLInputElement} */ (document.getElementById("dist"));
+let collisionCheck = /** @type {HTMLInputElement} */ (document.getElementById("collisionCheck"));
 
 const textureLoader = new T.TextureLoader();
 const objLoader = new OBJLoader();
@@ -445,7 +446,7 @@ export class Cow extends GrObject{
 
         super(`Cow-${++cowCount}`, cow);
 
-        cow.position.set(xpos + center.x, 0 ,zpos + center.z);
+        cow.position.set(xpos + center.x, 0, zpos + center.z);
         cow.rotateY(theta);
 
         let ctimer = 0;
@@ -454,6 +455,7 @@ export class Cow extends GrObject{
         this.cow = cow;
         this.aura = cowAura;
         this.friends = [];
+        this.raycasters = [];
         this.index = index;
 
         this.ridePoint = new T.Object3D();
@@ -461,8 +463,20 @@ export class Cow extends GrObject{
         this.cow.add(this.ridePoint);
         this.rideable = this.ridePoint;
     }
-    setFriends(friends){
+    setFriends(friends, bound){
         this.friends = friends;
+        const rayHeight = 2;
+        for (let i = 0; i < this.friends.length; i++){
+            const other = this.friends[i].cow;
+            let dir = new T.Vector3(other.position.x - this.cow.position.x, 0, other.position.z - this.cow.position.z);
+            dir = dir.normalize();
+            if (i != this.index){
+                let rc = new T.Raycaster(new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z), dir, 0, 32);
+                this.raycasters.push(rc);
+            } else {
+                this.raycasters.push(null);
+            }
+        }
     }
     stepWorld(delta){
         let speed = Number(speedSlider.value);
@@ -479,7 +493,7 @@ export class Cow extends GrObject{
         }
 
         // stay in bounds
-        const bound = 7.8;
+        const bound = 7.7;
         let center = new T.Vector3(10.5, 0 ,-2);
         let relx = this.cow.position.x - center.x;
         let relz = this.cow.position.z - center.z;
@@ -504,6 +518,8 @@ export class Cow extends GrObject{
             this.ctimer = flashTime;
         }
 
+        // boid collision
+        const rayHeight = 2;
         let nearby = [];
         let verynearby = [];
         let cowsize = .25;
@@ -513,13 +529,38 @@ export class Cow extends GrObject{
                 let thisz = this.cow.position.z;
                 let thatx = this.friends[i].cow.position.x;
                 let thatz = this.friends[i].cow.position.z;
-                if ((Math.abs(thisx-thatx) <= cowsize)&&(Math.abs(thisz-thatz) <= cowsize)){ 
-                    let xdir = thisx-thatx;
-                    let zdir = thisz-thatz;
-                    let angle = Math.atan2(xdir, zdir);
-                    this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
-                    this.ctimer = flashTime;
+
+                if (collisionCheck.checked){
+                    //update raycasters (if toggle is on)
+                    const other = this.friends[i].cow;
+                    let dir = new T.Vector3(other.position.x - this.cow.position.x, 0, other.position.z - this.cow.position.z);
+                    dir = dir.normalize();
+                    this.raycasters[i].set(new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z), dir);
+                    //collision with raycasters
+                    let myIntersect = this.raycasters[i].intersectObject(this.cow);
+                    let otherIntersect = this.raycasters[i].intersectObject(this.friends[i].cow);
+                    console.log(myIntersect.distance);
+                    console.log(otherIntersect.distance);
+                    if (myIntersect.distance > otherIntersect.distance){
+                        // we collided
+                        let xdir = thisx-thatx;
+                        let zdir = thisz-thatz;
+                        let angle = Math.atan2(xdir, zdir);
+                        this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
+                        this.ctimer = flashTime;
+                    }
+                    
+
+                } else { // use distances
+                    if ((Math.abs(thisx-thatx) <= cowsize)&&(Math.abs(thisz-thatz) <= cowsize)){ 
+                        let xdir = thisx-thatx;
+                        let zdir = thisz-thatz;
+                        let angle = Math.atan2(xdir, zdir);
+                        this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
+                        this.ctimer = flashTime;
+                    }
                 }
+
                 // keep track of nearby boids that will influence steering
                 const distance = Number(distanceSlider.value);
                 if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance){

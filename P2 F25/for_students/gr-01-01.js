@@ -113,7 +113,8 @@ boundary.setPos(10.5,0,-2);
 
 //cows here
 let cows = [];
-for (let i = 0; i < 50; i++){
+const numCows = 2;
+for (let i = 0; i < numCows; i++){
   let x = 16*Math.random()-8;
   let z = 16*Math.random()-8;
   let theta = 2*Math.PI*Math.random();
@@ -122,7 +123,7 @@ for (let i = 0; i < 50; i++){
   cows.push(cow);
 }
 for (let i = 0; i < cows.length; i++){
-  cows[i].setFriends(cows);
+  cows[i].setFriends(cows, boundary);
 }
 
 let silo1 = new Silo(1);
