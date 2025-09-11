@@ -113,7 +113,7 @@ boundary.setPos(10.5,0,-2);
 
 //cows here
 let cows = [];
-const numCows = 2;
+const numCows = 3;
 for (let i = 0; i < numCows; i++){
   let x = 16*Math.random()-8;
   let z = 16*Math.random()-8;

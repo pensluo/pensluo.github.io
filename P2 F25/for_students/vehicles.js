@@ -424,6 +424,7 @@ cowObj2.traverse(function (child) {
     }
 } );
 
+const rayHeight = 0;
 let flashTime = 500;
 let cowCount = 0;
 export class Cow extends GrObject{
@@ -465,7 +466,6 @@ export class Cow extends GrObject{
     }
     setFriends(friends, bound){
         this.friends = friends;
-        const rayHeight = 2;
         for (let i = 0; i < this.friends.length; i++){
             const other = this.friends[i].cow;
             let dir = new T.Vector3(other.position.x - this.cow.position.x, 0, other.position.z - this.cow.position.z);
@@ -519,7 +519,6 @@ export class Cow extends GrObject{
         }
 
         // boid collision
-        const rayHeight = 2;
         let nearby = [];
         let verynearby = [];
         let cowsize = .25;
@@ -537,17 +536,19 @@ export class Cow extends GrObject{
                     dir = dir.normalize();
                     this.raycasters[i].set(new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z), dir);
                     //collision with raycasters
-                    let myIntersect = this.raycasters[i].intersectObject(this.cow);
-                    let otherIntersect = this.raycasters[i].intersectObject(this.friends[i].cow);
-                    console.log(myIntersect.distance);
-                    console.log(otherIntersect.distance);
-                    if (myIntersect.distance > otherIntersect.distance){
-                        // we collided
-                        let xdir = thisx-thatx;
-                        let zdir = thisz-thatz;
-                        let angle = Math.atan2(xdir, zdir);
-                        this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
-                        this.ctimer = flashTime;
+                    let myIntersect = this.raycasters[i].intersectObject(this.cow)[0];
+                    let otherIntersect = this.raycasters[i].intersectObject(this.friends[i].cow)[0];
+                    if (myIntersect && otherIntersect){
+                        let dist = otherIntersect.distance - myIntersect.distance;
+                        console.log(dist);
+                        if (dist <= .5){
+                            // we collided
+                            let xdir = thisx-thatx;
+                            let zdir = thisz-thatz;
+                            let angle = Math.atan2(xdir, zdir);
+                            this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), angle);
+                            this.ctimer = flashTime;
+                        }
                     }
                     
 
