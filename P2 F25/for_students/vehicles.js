@@ -428,7 +428,7 @@ const rayHeight = 0;
 let flashTime = 500;
 let cowCount = 0;
 export class Cow extends GrObject{
-    constructor(xpos, zpos, theta, index){ 
+    constructor(xpos, zpos, theta, index, bound){ 
         let center = new T.Vector3(10.5, 0 ,-2);
         
         let cowmodel = cowObj.clone(); 
@@ -459,24 +459,33 @@ export class Cow extends GrObject{
         this.raycasters = [];
         this.index = index;
 
+        this.wallRaycaster = null;
+        this.wall = bound;
+
         this.ridePoint = new T.Object3D();
         this.ridePoint.translateY(.7);
         this.cow.add(this.ridePoint);
         this.rideable = this.ridePoint;
     }
-    setFriends(friends, bound){
+    setFriends(friends){
+        // make a raycaster for each of the other cows
         this.friends = friends;
+        let pos = new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z);
         for (let i = 0; i < this.friends.length; i++){
             const other = this.friends[i].cow;
             let dir = new T.Vector3(other.position.x - this.cow.position.x, 0, other.position.z - this.cow.position.z);
             dir = dir.normalize();
             if (i != this.index){
-                let rc = new T.Raycaster(new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z), dir, 0, 32);
+                let rc = new T.Raycaster(pos, dir, 0, 32);
                 this.raycasters.push(rc);
             } else {
                 this.raycasters.push(null);
             }
         }
+        // make a raycaster that points forward to detect wall collision
+        let facing = new T.Vector3();
+        this.cow.getWorldDirection(facing);
+        this.wallRaycaster = new T.Raycaster(pos, facing);
     }
     stepWorld(delta){
         let speed = Number(speedSlider.value);
@@ -492,30 +501,48 @@ export class Cow extends GrObject{
             this.cow.rotateOnWorldAxis(new T.Vector3(0,1,0),change);
         }
 
-        // stay in bounds
+        // stay in bounds (depending on collision type)
         const bound = 7.7;
         let center = new T.Vector3(10.5, 0 ,-2);
         let relx = this.cow.position.x - center.x;
         let relz = this.cow.position.z - center.z;
-        if (relx < -bound){
-            this.cow.position.set(center.x - bound, 0, this.cow.position.z);
-            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
-            this.ctimer = flashTime;
-        }
-        if (relx > bound){
-            this.cow.position.set(center.x + bound, 0, this.cow.position.z);
-            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
-            this.ctimer = flashTime;
-        }
-        if (relz < -bound){
-            this.cow.position.set(this.cow.position.x, 0, center.z - bound);
-            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
-            this.ctimer = flashTime;
-        }
-        if (relz > bound){
-            this.cow.position.set(this.cow.position.x, 0, center.z + bound);
-            this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
-            this.ctimer = flashTime;
+        let facing = new T.Vector3();
+        this.cow.getWorldDirection(facing);
+        if (collisionCheck.checked){
+            this.wallRaycaster?.set(new T.Vector3(this.cow.position.x, rayHeight, this.cow.position.z), facing);
+            let wallIntersect = this.wallRaycaster?.intersectObject(this.wall.objects[0])[0];
+            if (wallIntersect){
+                if (wallIntersect.distance <= .5){
+                    // there is a collision
+                    this.cow.rotateY(Math.PI);
+                    this.ctimer = flashTime;
+                }
+            }
+            // bounce the cows back in if they floated out during loading
+            if ((relx<-bound-.5)||(relx>bound+.5)||(relz<-bound-.5)||(relz>bound+.5)){
+                this.cow.position.set(center.x,center.y,center.z);
+            }
+        } else {
+            if (relx < -bound){
+                this.cow.position.set(center.x - bound, 0, this.cow.position.z);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.ctimer = flashTime;
+            }
+            if (relx > bound){
+                this.cow.position.set(center.x + bound, 0, this.cow.position.z);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.ctimer = flashTime;
+            }
+            if (relz < -bound){
+                this.cow.position.set(this.cow.position.x, 0, center.z - bound);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.ctimer = flashTime;
+            }
+            if (relz > bound){
+                this.cow.position.set(this.cow.position.x, 0, center.z + bound);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.ctimer = flashTime;
+            }
         }
 
         // boid collision
@@ -540,8 +567,7 @@ export class Cow extends GrObject{
                     let otherIntersect = this.raycasters[i].intersectObject(this.friends[i].cow)[0];
                     if (myIntersect && otherIntersect){
                         let dist = otherIntersect.distance - myIntersect.distance;
-                        console.log(dist);
-                        if (dist <= .5){
+                        if (dist <= .7){ // kind of arbitrary number
                             // we collided
                             let xdir = thisx-thatx;
                             let zdir = thisz-thatz;

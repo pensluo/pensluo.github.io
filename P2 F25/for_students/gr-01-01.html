@@ -16,7 +16,9 @@
     <script src="gr-01-01.js" type="module"></script>
   <h3>Cow Behavior Controls</h3>
     </br>
-    Raycast Collision (Will use bounding spheres otherwise)<input type="checkbox" id="collisionCheck">
+    Number of boids (0-50) (reload page for change to take effect)<input type="number" id="numInput" min="2" max="50"/>
+    </br>
+    Raycast Collision (very laggy, not recommended for >2 boids)<input type="checkbox" id="collisionCheck">
     </br>
     Speed<input type="range" width="100px" min="0" max="6" step=".2" value="3" id="speed" />
     </br>

@@ -21,6 +21,8 @@ import { HippedHouse, GableHouse, Barn, Oak, Silo, Fence, WheatField, Road, Fire
 import { Scooter, Saucer, Cow, Alien, AbductedCow, Car} from "./vehicles.js";
 import * as T from "../libs/CS559-Three/build/three.module.js";
 
+let numInput = /** @type {HTMLInputElement} */ (document.getElementById("numInput"));
+
 
 /**m
  * The Graphics Town Main -
@@ -113,17 +115,23 @@ boundary.setPos(10.5,0,-2);
 
 //cows here
 let cows = [];
-const numCows = 3;
+let numCows = parseInt(numInput.value);
+if (numCows < 0){
+  numCows = 0;
+}
+if (numCows > 50){
+  numCows = 50;
+}
 for (let i = 0; i < numCows; i++){
   let x = 16*Math.random()-8;
   let z = 16*Math.random()-8;
   let theta = 2*Math.PI*Math.random();
-  let cow = new Cow(x,z,theta,i);
+  let cow = new Cow(x,z,theta,i, boundary);
   world.add(cow);
   cows.push(cow);
 }
 for (let i = 0; i < cows.length; i++){
-  cows[i].setFriends(cows, boundary);
+  cows[i].setFriends(cows);
 }
 
 let silo1 = new Silo(1);
