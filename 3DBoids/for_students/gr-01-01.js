@@ -6,13 +6,6 @@
  *
  * This is the main file - it creates the world, populates it with
  * objects and behaviors, and starts things running
- *
- * The initial distributed version has a pretty empty world.
- * There are a few simple objects thrown in as examples.
- *
- * It is the students job to extend this by defining new object types
- * (in other files), then loading those files as modules, and using this
- * file to instantiate those objects in the world.
  */
 
 import { GrWorld } from "../libs/CS559-Framework/GrWorld.js";
@@ -23,55 +16,53 @@ import * as T from "../libs/CS559-Three/build/three.module.js";
 
 let numInput = /** @type {HTMLInputElement} */ (document.getElementById("numInput"));
 
-
 /**m
  * The Graphics Town Main -
  * This builds up the world and makes it go...
  */
 
 // make the world
+const size = 20;
+
 let world = new GrWorld({
     width: 800,
     height: 600,
-    groundplanesize: 20, // make the ground plane big enough for a world of stuff
-    groundplanecolor: 0x478c37,
-    ambient: .5,
+    groundplanesize: size,
+    groundplanecolor: 0xFFFFFF,
+    ambient: 1,
     lightBrightness: 0,
 });
 
-let boundary = new Boundary();
+let boundary = new Boundary(size);
 world.add(boundary);
 
-let boids = [];
-let numBoids = parseInt(numInput.value);
+let boids = []; // keep an array of all the boids
+let numBoids;
+if (numInput.value){
+  numBoids = parseInt(numInput.value);
+} else {
+  numBoids = 100;
+}
 if (numBoids < 0){
   numBoids = 0;
 }
-if (numBoids > 50){
-  numBoids = 50;
+if (numBoids > 100){
+  numBoids = 100;
 }
+// add boids to the world
 for (let i = 0; i < numBoids; i++){
-  let x = 16*Math.random()-8;
-  let z = 16*Math.random()-8;
+  // put each one in a random spot in bounds
+  let x = size*2*Math.random()-size;
+  let z = size*2*Math.random()-size;
+  // facing a random angle
   let theta = 2*Math.PI*Math.random();
   let boid = new Boid(x, z, theta, i, boundary);
   world.add(boid);
   boids.push(boid);
 }
+// pass the array of all boids to each boid so they can have collision and steering behaviors
 for (let i = 0; i < boids.length; i++){
   boids[i].setOthers(boids);
-}
-
-///////////////////////////////////////////////////////////////
-// because I did not store the objects I want to highlight in variables, I need to look them up by name
-// This code is included since it might be useful if you want to highlight your objects here
-function highlight(obName) {
-    const toHighlight = world.objects.find(ob => ob.name === obName);
-    if (toHighlight) {
-        toHighlight.highlighted = true;
-    } else {
-        throw `no object named ${obName} for highlighting!`;
-    }
 }
 
 ///////////////////////////////////////////////////////////////

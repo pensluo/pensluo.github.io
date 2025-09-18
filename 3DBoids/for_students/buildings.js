@@ -6,51 +6,52 @@ import { GrObject } from "../libs/CS559-Framework/GrObject.js";
 
 let boundaryCount = 0;
 export class Boundary extends GrObject {
-    constructor(){
+    constructor(s){ // s is size
         let geometry = new T.BufferGeometry();
 
-        const h = .5;
+        const h = 1; // height
+
         const vertices = new Float32Array([
-            -8,0,-8,
-            8,0,-8,
-            -8,h,-8,
+            -s,0,-s,
+            s,0,-s,
+            -s,h,-s,
 
-            -8,h,-8,
-            8,0,-8,
-            8,h,-8,
-
-
-            8,0,-8,
-            8,0,8,
-            8,h,-8,
-
-            8,h,-8,
-            8,0,8,
-            8,h,8,
+            -s,h,-s,
+            s,0,-s,
+            s,h,-s,
 
 
-            8,0,8,
-            -8,0,8,
-            8,h,8,
+            s,0,-s,
+            s,0,s,
+            s,h,-s,
 
-            8,h,8,
-            -8,0,8,
-            -8,h,8,
+            s,h,-s,
+            s,0,s,
+            s,h,s,
 
 
-            -8,0,8,
-            -8,0,-8,
-            -8,h,8,
+            s,0,s,
+            -s,0,s,
+            s,h,s,
 
-            -8,h,8,
-            -8,0,-8,
-            -8,h,-8
+            s,h,s,
+            -s,0,s,
+            -s,h,s,
+
+
+            -s,0,s,
+            -s,0,-s,
+            -s,h,s,
+
+            -s,h,s,
+            -s,0,-s,
+            -s,h,-s
         ]);
 
         geometry.setAttribute('position',new T.BufferAttribute(vertices,3));
         geometry.computeVertexNormals();
 
-        let material = new T.MeshStandardMaterial({color: 0xA67F4E, side: 2});
+        let material = new T.MeshStandardMaterial({color: 0xFF0000, side: 2});
 
         let mesh = new T.Mesh(geometry, material);
         let group = new T.Group();
