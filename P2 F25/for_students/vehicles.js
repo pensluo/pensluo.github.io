@@ -414,6 +414,7 @@ let cowObj2 = await objLoader.loadAsync("./assets/spot_triangulated.obj");
 cowObj.traverse(function (child) {
     if (child instanceof T.Mesh) {
         child.material.map = cowTex;
+        child.material.side = 2;
     }
 } );
 
@@ -525,22 +526,22 @@ export class Cow extends GrObject{
         } else {
             if (relx < -bound){
                 this.cow.position.set(center.x - bound, 0, this.cow.position.z);
-                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
                 this.ctimer = flashTime;
             }
             if (relx > bound){
                 this.cow.position.set(center.x + bound, 0, this.cow.position.z);
-                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
                 this.ctimer = flashTime;
             }
             if (relz < -bound){
                 this.cow.position.set(this.cow.position.x, 0, center.z - bound);
-                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
                 this.ctimer = flashTime;
             }
             if (relz > bound){
                 this.cow.position.set(this.cow.position.x, 0, center.z + bound);
-                this.cow.rotateOnAxis(new T.Vector3(0,1,0),2);
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
                 this.ctimer = flashTime;
             }
         }
