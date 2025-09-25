@@ -16,11 +16,11 @@
     <script src="gr-01-01.js" type="module"></script>
   <h3>Boid Behavior Controls</h3>
     </br>
-    Number of boids (0-100) (reload page for change to take effect)<input type="number" id="numInput" min="2" max="50"/>
+    Number of boids (0-150) (reload page for change to take effect)<input type="number" id="numInput" min="0" max="150"/>
     </br>
-    Raycast Collision (very laggy, not recommended for >10 boids)<input type="checkbox" id="collisionCheck">
+    Raycast Collision (very laggy, not recommended for >15 boids)<input type="checkbox" id="collisionCheck">
     </br>
-    Speed<input type="range" width="100px" min="0" max="6" step=".2" value="3" id="speed" />
+    Speed<input type="range" width="100px" min="0" max="15" step=".2" value="10" id="speed" />
     </br>
     Flocking Distance<input type="range" width="100px" min="0" max="10" step="1" value="5" id="dist" />
     </br>

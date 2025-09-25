@@ -38,6 +38,7 @@ world.add(boundary);
 
 let boids = []; // keep an array of all the boids
 let numBoids;
+
 if (numInput.value){
   numBoids = parseInt(numInput.value);
 } else {
@@ -46,9 +47,10 @@ if (numInput.value){
 if (numBoids < 0){
   numBoids = 0;
 }
-if (numBoids > 100){
-  numBoids = 100;
+if (numBoids > 150){
+  numBoids = 150;
 }
+
 // add boids to the world
 for (let i = 0; i < numBoids; i++){
   // put each one in a random spot in bounds

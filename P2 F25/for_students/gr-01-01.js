@@ -115,7 +115,12 @@ boundary.setPos(10.5,0,-2);
 
 //cows here
 let cows = [];
-let numCows = parseInt(numInput.value);
+let numCows;
+if (!numInput.value){
+  numCows = 50;
+} else {
+  numCows = parseInt(numInput.value);
+}
 if (numCows < 0){
   numCows = 0;
 }

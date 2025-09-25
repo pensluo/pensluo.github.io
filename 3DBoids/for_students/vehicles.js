@@ -13,21 +13,21 @@ let cohesionSlider = /** @type {HTMLInputElement} */ (document.getElementById("c
 let distanceSlider = /** @type {HTMLInputElement} */ (document.getElementById("dist"));
 let collisionCheck = /** @type {HTMLInputElement} */ (document.getElementById("collisionCheck"));
 
-const size = 1; // visible size of the boid (does NOT affect collision)
-const rayHeight = 1; // y elevation where raycasters will originate (in this case, in the center of each cube)
+const size = 1; // visible size of the boid
+const rayHeight = size/2; // y elevation where raycasters will originate (in this case, in the center of each cube)
 const flashTime = 500; // boids flash for .5 seconds after a collision
 const bound = 20 - size/2; // distance from (0,0,0) that the boids are allowed inside
 const padding = 1; // boids can end up outside the bounds as the page loads, if they are farther than bound + padding they get teleported back to the origin
-const collisionDist = 1.1;
-const rayCollisionDist = 1;
-const nearFactor = 4; // used in determining flocking behaviors. explained more thoroughly below
+const collisionDist = 1;
+const rayCollisionDist = 0;
+const nearFactor = 5; // used in determining flocking behaviors. explained more thoroughly below
 
 let boidCount = 0;
 
 export class Boid extends GrObject{
     constructor(xpos, zpos, theta, index, bound){ 
         let geo = new T.BoxGeometry(size, size, size);
-        let mat = new T.MeshStandardMaterial({color: 0x0000FF});
+        let mat = new T.MeshStandardMaterial({color: 0x0000FF, side: 2});
         let mesh = new T.Mesh(geo, mat);
 
         let boid = new T.Group();
@@ -176,12 +176,12 @@ export class Boid extends GrObject{
                     }
                 }
 
-                // keep track of nearby boids that will influence steering
+                // keep track of nearby boids that will influence alignment steering
                 const distance = Number(distanceSlider.value);
                 if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance){
                     nearby.push(this.others[i]);
                 }
-                // keep track of VERY nearby boids to influence separation steering
+                // keep track of VERY nearby boids to influence separation and cohesion steering
                 if (Math.sqrt((thisx-thatx)*(thisx-thatx)+(thisz-thatz)*(thisz-thatz)) <= distance/nearFactor){
                     verynearby.push(this.others[i]);
                 }
@@ -247,7 +247,7 @@ export class Boid extends GrObject{
         let avgx = 0;
         let avgz = 0;
         // sum the positions of all the nearby boids
-        nearby.forEach (function (boid){
+        verynearby.forEach (function (boid){
             avgx += boid.boid.position.x;
             avgz += boid.boid.position.y;
         });
