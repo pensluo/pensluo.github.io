@@ -10,9 +10,9 @@
 
 import { GrWorld } from "../libs/CS559-Framework/GrWorld.js";
 import { WorldUI } from "../libs/CS559-Framework/WorldUI.js";
-import { Boundary } from "./buildings.js";
-import { Boid } from "./vehicles.js";
 import * as T from "../libs/CS559-Three/build/three.module.js";
+import { Fence, WheatField, Fireflies } from "./buildings.js";
+import { Alien, Cow, Saucer } from "./vehicles.js";
 
 let numInput = /** @type {HTMLInputElement} */ (document.getElementById("numInput"));
 
@@ -27,45 +27,64 @@ const size = 20;
 let world = new GrWorld({
     width: 800,
     height: 600,
-    groundplanesize: size,
-    groundplanecolor: 0xFFFFFF,
-    ambient: 1,
+    groundplanesize: 10,
+    groundplanecolor: 0x478c37,
+    ambient: .1,
     lightBrightness: 0,
 });
 
-let boundary = new Boundary(size);
-world.add(boundary);
+const skyboxLoader = new T.CubeTextureLoader();
+const textureCube = skyboxLoader.load( [
+  './assets/px.png', './assets/nx.png',
+  './assets/py.png', './assets/ny.png',
+  './assets/pz.png', './assets/nz.png'
+] );
+world.scene.background = textureCube;
 
-let boids = []; // keep an array of all the boids
-let numBoids;
+let fireflies1 = new Fireflies(0);
+world.add(fireflies1);
+fireflies1.setPos(-12,0,-13);
 
-if (numInput.value){
-  numBoids = parseInt(numInput.value);
-} else {
-  numBoids = 100;
-}
-if (numBoids < 0){
-  numBoids = 0;
-}
-if (numBoids > 150){
-  numBoids = 150;
-}
+let fireflies2 = new Fireflies(2*Math.PI/3);
+world.add(fireflies2);
+fireflies2.setPos(4,0,12);
 
-// add boids to the world
-for (let i = 0; i < numBoids; i++){
-  // put each one in a random spot in bounds
-  let x = size*2*Math.random()-size;
-  let z = size*2*Math.random()-size;
-  // facing a random angle
-  let theta = 2*Math.PI*Math.random();
-  let boid = new Boid(x, z, theta, i, boundary);
-  world.add(boid);
-  boids.push(boid);
-}
-// pass the array of all boids to each boid so they can have collision and steering behaviors
-for (let i = 0; i < boids.length; i++){
-  boids[i].setOthers(boids);
-}
+let fireflies3 = new Fireflies(4*Math.PI/3);
+world.add(fireflies3);
+fireflies3.setPos(13,0,-1);
+
+let fence = new Fence();
+world.add(fence);
+
+let field = new WheatField(0);
+world.add(field);
+
+let alien = new Alien(0);
+world.add(alien);
+
+let cow = new Cow();
+world.add(cow);
+
+let saucer = new Saucer(0, textureCube);
+world.add(saucer);
+saucer.setPos(0,6,0);
+
+let lumps = new T.TextureLoader().load("./assets/noisehd.png");
+lumps.wrapS = T.RepeatWrapping;
+lumps.wrapT = T.RepeatWrapping;
+lumps.repeat.set(8,8);
+world.groundplane.material.map = lumps;
+world.groundplane.material.normalMap = lumps;
+
+let moonlight = new T.DirectionalLight("white", .2);
+moonlight.shadow.camera.scale.set(5,5,5);
+moonlight.position.set(20,20,20);
+let moontarget = new T.Group();
+moontarget.position.set(-1,0,-1);
+moonlight.target = moontarget;
+moonlight.castShadow = true;
+world.scene.add(moonlight);
+world.scene.add(moontarget);
 
 ///////////////////////////////////////////////////////////////
 // build and run the UI

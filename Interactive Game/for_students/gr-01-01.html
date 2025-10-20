@@ -5,31 +5,15 @@
   </head>
 
   <body>
-    <div id="div1"></div>
-<script type="importmap">
-      {
-          "imports": {
-              "three": "../libs/CS559-Three/build/three.module.js"
-          }
-      }
-  </script>
-    <script src="gr-01-01.js" type="module"></script>
-  <h3>Boid Behavior Controls</h3>
-    </br>
-    Number of boids (0-150) (reload page for change to take effect)<input type="number" id="numInput" min="0" max="150"/>
-    </br>
-    Raycast Collision (very laggy, not recommended for >15 boids)<input type="checkbox" id="collisionCheck">
-    </br>
-    Speed<input type="range" width="100px" min="0" max="15" step=".2" value="10" id="speed" />
-    </br>
-    Flocking Distance<input type="range" width="100px" min="0" max="10" step="1" value="5" id="dist" />
-    </br>
-    Alignment<input type="range" width="100px" min="0" max="3" step=".1" value="1.5" id="alignment" />
-    </br>
-    Separation<input type="range" width="100px" min="0" max="10" step=".1" value="0" id="separation" />
-    </br>
-    Cohesion<input type="range" width="100px" min="0" max="3" step=".1" value="0" id="cohesion" />
-    </br>
+      <div id="div1"></div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../libs/CS559-Three/build/three.module.js"
+            }
+        }
+    </script>
+      <script src="gr-01-01.js" type="module"></script>
   </body>
 </html>
 
