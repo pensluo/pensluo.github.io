@@ -144,6 +144,7 @@ export class Alien extends GrObject{
 
         group.scale.set(.12,.12,.12);
         super(`Alien-${++alienCount}`, center);
+        this.center = center;
         this.body = group;
         this.neck = headJoint;
         this.rShoulder = rightShoulderJoint;
@@ -162,18 +163,51 @@ export class Alien extends GrObject{
     move(){
         let keyMap = this.keyMap;
         const speed = 0.02;
+        const turnSpeed = 0.04;
 
         if(keyMap[87] == true){
-            this.body.translateZ(speed);
+            this.center.translateZ(speed);
         }
         if(keyMap[83] == true){
-            this.body.translateZ(-speed);
+            this.center.translateZ(-speed);
         }
         if(keyMap[65] == true){
-            this.body.rotateY(speed*2);
+            this.center.rotateY(turnSpeed);
         }
         if(keyMap[68] == true){
-            this.body.rotateY(-speed*2);
+            this.center.rotateY(-turnSpeed);
+        }
+
+        // collision with fence
+        let x = this.center.position.x;
+        let z = this.center.position.z;
+
+        const bound = 6.5;
+        // edges
+        if (x < -bound){
+            this.center.position.set(-bound, 0, z);
+        }
+        if (x > bound){
+            this.center.position.set(bound, 0, z);
+        }
+        if (z < -bound){
+            this.center.position.set(x, 0, -bound);
+        }
+        if (z > bound){
+            this.center.position.set(x, 0, bound);
+        }
+        // corners
+        if (x < -bound && z < -bound){
+            this.center.position.set(-bound, 0, -bound);
+        }
+        if (x > bound && z > bound){
+            this.center.position.set(bound, 0, bound);
+        }
+        if (z < -bound && x > bound){
+            this.center.position.set(bound, 0, -bound);
+        }
+        if (z > bound && x < -bound){
+            this.center.position.set(-bound, 0, bound);
         }
     }
     stepWorld(delta){
@@ -193,8 +227,8 @@ export class Alien extends GrObject{
         this.lShoulder.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(this.time));
         this.lElbow.setRotationFromAxisAngle(new T.Vector3(1,0,0),-.5+.5*Math.sin(this.time));
 
-        // whole body movement. also bobbing
-        //this.body.position.set(0,.008*Math.sin(this.time), 0);
+        // fix this line so it only bobs instead of locking us to 0,0
+        // this.body.position.set(0,.008*Math.sin(this.time), 0);
         this.move();
 
     }

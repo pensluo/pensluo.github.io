@@ -75,7 +75,7 @@ document.addEventListener("keyup", onDocumentKeyUp, true);
 
 let alien = new Alien(0, keyMap);
 world.add(alien);
-alien.setPos(2,0,2);
+alien.setPos(0,0,1);
 
 function onDocumentKeyDown(event){ 
   let keyCode = event.keyCode;
