@@ -53,17 +53,58 @@ let fireflies3 = new Fireflies(4*Math.PI/3);
 world.add(fireflies3);
 fireflies3.setPos(13,0,-1);
 
-let fence = new Fence();
+let fence = new Fence(1.95);
 world.add(fence);
+fence.setPos(-6.8,0,-6.8);
 
-let field = new WheatField(0);
-world.add(field);
+for (let i = -10; i <= 11; i += 7){
+  for (let j = -10; j <= 11; j+= 7){
+    if ((Math.abs(i) >= 10) || (Math.abs(j) >= 10)){
+      let field = new WheatField(0);
+      world.add(field);
+      field.setPos(i - .6,0,j - .6);
+    }
+  }
+}
 
-let alien = new Alien(0);
+// keyboard controls code adapted from 
+// https://stackoverflow.com/questions/29266602/javascript-when-having-pressed-2-keys-simultaneously-down-leaving-one-of-them
+let keyMap = [];
+document.addEventListener("keydown", onDocumentKeyDown, true); 
+document.addEventListener("keyup", onDocumentKeyUp, true);
+
+let alien = new Alien(0, keyMap);
 world.add(alien);
+alien.setPos(2,0,2);
 
-let cow = new Cow();
-world.add(cow);
+function onDocumentKeyDown(event){ 
+  let keyCode = event.keyCode;
+  keyMap[keyCode] = true;
+}
+function onDocumentKeyUp(event){
+  let keyCode = event.keyCode;
+  keyMap[keyCode] = false;
+}
+
+let cows = [];
+let numCows = 20;
+for (let i = 0; i < numCows; i++){
+  let x = 12*Math.random()-6;
+  let z = 12*Math.random()-6;
+  let theta = 2*Math.PI*Math.random();
+
+  // don't spawn in center beam
+  let dist = Math.sqrt(x*x + z*z);
+  while (dist <= 2){
+    x = 12*Math.random()-6;
+    z = 12*Math.random()-6;
+    dist = Math.sqrt(x*x + z*z);
+  }
+
+  let cow = new Cow(x,z,theta);
+  world.add(cow);
+  cows.push(cow);
+}
 
 let saucer = new Saucer(0, textureCube);
 world.add(saucer);

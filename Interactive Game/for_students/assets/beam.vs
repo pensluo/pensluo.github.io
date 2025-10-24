@@ -10,6 +10,7 @@ void main() {
     // we know the direction from the normal (which should be a unit vector)
     
     // increase and decrease quadratically over time * grow/shrink at the base depending on v and time * wiggle
+    // (-4.*time*time+4.*time-.7) + (1.-uv.y)*(1.-uv.y)*(1.-time) + 
     float disp = .1*sin((1.-uv.y)*(1.-uv.y)*100.)*(sin(uv.x*20.));
     vec3 pos = position + disp*normal;
 

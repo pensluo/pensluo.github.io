@@ -15,7 +15,7 @@ let lumps = textureLoader.load("./assets/noise.png");
 
 let alienCount = 0;
 export class Alien extends GrObject{
-    constructor(timeOffset){
+    constructor(timeOffset, keyMap){
         let torsoGeo = new T.CylinderGeometry(1,.3,1.4);
         let neckGeo = new T.CylinderGeometry(.1,.15,.5);
         let headGeo = new T.SphereGeometry(1);
@@ -142,7 +142,7 @@ export class Alien extends GrObject{
         let center = new T.Group();
         center.add(group);
 
-        group.scale.set(.06,.06,.06);
+        group.scale.set(.12,.12,.12);
         super(`Alien-${++alienCount}`, center);
         this.body = group;
         this.neck = headJoint;
@@ -157,17 +157,28 @@ export class Alien extends GrObject{
         this.time = timeOffset;
         this.pathTime = timeOffset;
 
-        this.ridePoint = new T.Object3D();
-        this.ridePoint.translateY(3);
-        this.body.add(this.ridePoint);
-        this.rideable = this.ridePoint;
+        this.keyMap = keyMap;
+    }
+    move(){
+        let keyMap = this.keyMap;
+        const speed = 0.02;
+
+        if(keyMap[87] == true){
+            this.body.translateZ(speed);
+        }
+        if(keyMap[83] == true){
+            this.body.translateZ(-speed);
+        }
+        if(keyMap[65] == true){
+            this.body.rotateY(speed*2);
+        }
+        if(keyMap[68] == true){
+            this.body.rotateY(-speed*2);
+        }
     }
     stepWorld(delta){
         this.time += delta/80;
         this.time %= 2*Math.PI;
-
-        this.pathTime += delta/1000;
-        this.pathTime %= 20;
 
         //animating arms and legs
         this.rHip.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(this.time));
@@ -182,22 +193,10 @@ export class Alien extends GrObject{
         this.lShoulder.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(this.time));
         this.lElbow.setRotationFromAxisAngle(new T.Vector3(1,0,0),-.5+.5*Math.sin(this.time));
 
-        let t = this.pathTime/20;
-        let p0 = [-5,-3];
-        let p1 = [0, 0];
-        let p2 = [19, -4];
-        let p3 = [7, 45];
-        // find derivatives at the segment endpoints using a cardinal spline
-        let pp1 = [.5*(p2[0]-p0[0]),.5*(p2[1]-p0[1])];
-        let pp2 = [.5*(p3[0]-p1[0]),.5*(p3[1]-p1[1])];
-        let p = [p1[0] + pp1[0] * t + (-3 * p1[0] - 2 * pp1[0] + 3 * p2[0] - pp2[0]) * t * t + (2 * p1[0] + pp1[0] - 2 * p2[0] + pp2[0]) * t * t * t, // x position
-                p1[1] + pp1[1] * t + (-3 * p1[1] - 2 * pp1[1] + 3 * p2[1] - pp2[1]) * t * t + (2 * p1[1] + pp1[1] - 2 * p2[1] + pp2[1]) * t * t * t, // y position
-                pp1[0] + (-3 * p1[0] - 2 * pp1[0] + 3 * p2[0] - pp2[0]) * t * 2 + (2 * p1[0] + pp1[0] - 2 * p2[0] + pp2[0]) * t * t * 3, // x derivative
-                pp1[1] + (-3 * p1[1] - 2 * pp1[1] + 3 * p2[1] - pp2[1]) * t * 2 + (2 * p1[1] + pp1[1] - 2 * p2[1] + pp2[1]) * t * t * 3]; // y derivative
-
         // whole body movement. also bobbing
-        this.body.setRotationFromAxisAngle(new T.Vector3(0,1,0),Math.atan2(p[2],p[3]));
-        this.body.position.set(p[0],.008*Math.sin(this.time), p[1]);
+        //this.body.position.set(0,.008*Math.sin(this.time), 0);
+        this.move();
+
     }
 }
 
@@ -211,50 +210,70 @@ cowObj.traverse(function (child) {
 } );
 
 let cowCount = 0;
-export class Cow extends GrObject{
-    constructor(){    
-
-        let thiscow = cowObj.clone(); 
+export class Cow extends GrObject{  
+    constructor(xpos, zpos, theta){ 
+        
+        let cowmodel = cowObj.clone(); 
         let cow = new T.Group();
-        cow.add(thiscow);
-        cow.scale.set(.3,.3,.3);
-        cow.position.set(0,.22,0);
-        thiscow.rotateY(Math.PI);
+        cow.add(cowmodel);
+        cowmodel.scale.set(.3,.3,.3);
+        cowmodel.position.set(0,.22,0);
+        cowmodel.rotateY(Math.PI);
 
-        let center = new T.Group();
-        center.add(cow);
+        super(`Cow-${++cowCount}`, cow);
 
-        super(`Cow-${++cowCount}`, center);
+        cow.position.set(xpos + 0, 0, zpos + 0);
+        cow.rotateY(theta);
 
         this.cow = cow;
-
-        this.ridePoint = new T.Object3D();
-        this.ridePoint.translateY(.7);
-        this.cow.add(this.ridePoint);
-        this.rideable = this.ridePoint;
+        this.state = 0; // 0 = wandering, 1 = carried, 2 = thrown, 3 = gone
     }
     stepWorld(delta){
-        let amount = (-.5 + Math.random())/900;
+        if (this.state == 0){ // wandering
 
-        let dist = 3;
-        let buffer = .1;
+            let randomDraw = Math.floor(50 * Math.random()); // 1 in 50 chance to turn slightly
+            if (randomDraw == 0){
+                let change = .3 - .6 * Math.random(); // change size: +-.3
+                this.cow.rotateOnWorldAxis(new T.Vector3(0,1,0),change);
+            }
 
-        this.cow.rotateY(amount * delta);
-        this.cow.translateZ(.0003 * delta);
-        if (Math.abs(this.cow.position.x) > dist || Math.abs(this.cow.position.z) > dist){
-            this.cow.rotateY(Math.PI);
-        }
-        if (this.cow.position.x > dist){
-            this.cow.position.set(dist-buffer, .22, this.cow.position.z);
-        }
-        if (this.cow.position.x < -1*dist){
-            this.cow.position.set(-dist+buffer, .22, this.cow.position.z);
-        }
-        if (this.cow.position.z > dist){
-            this.cow.position.set(this.cow.position.x, .22, dist-buffer);
-        }
-        if (this.cow.position.z < -1*dist){
-            this.cow.position.set(this.cow.position.x, .22, -dist+buffer);
+            let x = this.cow.position.x;
+            let z = this.cow.position.z;
+
+            // stay inside the fence
+            const bound = 6;
+            if (x < -bound){
+                this.cow.position.set(-bound, 0, z);
+            }
+            if (x > bound){
+                this.cow.position.set(bound, 0, z);
+            }
+            if (z < -bound){
+                this.cow.position.set(x, 0, -bound);
+            }
+            if (z > bound){
+                this.cow.position.set(x, 0, bound);
+            }
+            if ((x < -bound)||(x > bound)||(z < -bound)||(z > bound)){
+                this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
+            }
+
+            // stay away from beam
+            const beamWidth = 2;
+            const dist = Math.sqrt(x*x + z*z);
+            if (dist <= beamWidth){
+                const dir = Math.atan2(x, z);
+                this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), dir);
+            }
+            
+            this.cow.translateZ(delta/5000);
+
+        } else if (this.state == 1){ // carried
+
+        } else if (this.state == 2){ // thrown
+
+        } else if (this.state == 3){ // gone
+
         }
     }
 }

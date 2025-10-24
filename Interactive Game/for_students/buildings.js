@@ -11,40 +11,40 @@ let fieldtex3 = loader.load("./assets/field3.png");
 
 let fenceCount = 0;
 export class Fence extends GrObject {
-    constructor(){
+    constructor(size){
         let group = new T.Group();
         let mat = new T.MeshStandardMaterial({color: "white"});
 
         let postGeo = new T.CylinderGeometry(.2,.3,2);
-        let sideGeo = new T.BoxGeometry(46,.4,.2);
+        let sideGeo = new T.BoxGeometry(46 * size,.4,.2);
 
-        for (let i = 0; i < 24; i++){
+        for (let i = 0; i < 24 * size; i++){
             let mesh = new T.Mesh(postGeo, mat);
             mesh.position.set(2*i,1,0);
             group.add(mesh);
         }
 
         let sideA = new T.Mesh(sideGeo, mat);
-        sideA.position.set(23,1.5,0);
+        sideA.position.set(23 * size,1.5,0);
         group.add(sideA);
         let sideA2 = new T.Mesh(sideGeo, mat);
-        sideA2.position.set(23,.8,0);
+        sideA2.position.set(23 * size,.8,0);
         group.add(sideA2);
 
-        for (let i = 0; i < 24; i++){
+        for (let i = 0; i < 24 * size; i++){
             let mesh = new T.Mesh(postGeo, mat);
-            mesh.position.set(2*i,1,46);
+            mesh.position.set(2*i,1,46 * size);
             group.add(mesh);
         }
 
         let sideB = new T.Mesh(sideGeo, mat);
-        sideB.position.set(23,1.5,46);
+        sideB.position.set(23 * size,1.5,46 * size);
         group.add(sideB);
         let sideB2 = new T.Mesh(sideGeo, mat);
-        sideB2.position.set(23,.8,46);
+        sideB2.position.set(23 * size,.8,46 * size);
         group.add(sideB2);
 
-        for (let i = 0; i < 24; i++){
+        for (let i = 0; i < 24 * size; i++){
             let mesh = new T.Mesh(postGeo, mat);
             mesh.position.set(0,1,2*i);
             group.add(mesh);
@@ -52,26 +52,26 @@ export class Fence extends GrObject {
 
         let sideC = new T.Mesh(sideGeo, mat);
         sideC.rotateY(Math.PI/2);
-        sideC.position.set(0,1.5,23);
+        sideC.position.set(0,1.5,23 * size);
         group.add(sideC);
         let sideC2 = new T.Mesh(sideGeo, mat);
         sideC2.rotateY(Math.PI/2);
-        sideC2.position.set(0,.8,23);
+        sideC2.position.set(0,.8,23 * size);
         group.add(sideC2);
 
-        for (let i = 0; i < 24; i++){
+        for (let i = 0; i < 24 * size; i++){
             let mesh = new T.Mesh(postGeo, mat);
-            mesh.position.set(48 - 2,1,2*i);
+            mesh.position.set((48 - 2) * size,1,2*i);
             group.add(mesh);
         }
 
         let sideD = new T.Mesh(sideGeo, mat);
         sideD.rotateY(Math.PI/2);
-        sideD.position.set(46,1.5,23);
+        sideD.position.set(46 * size,1.5,23 * size);
         group.add(sideD);
         let sideD2 = new T.Mesh(sideGeo, mat);
         sideD2.rotateY(Math.PI/2);
-        sideD2.position.set(46,.8,23);
+        sideD2.position.set(46 * size,.8,23 * size);
         group.add(sideD2);
 
         group.scale.set(.15,.15,.15);
