@@ -162,11 +162,15 @@ export class Alien extends GrObject{
         this.keyMap = keyMap;
         this.cows = cows;
         this.carrying = false;
+
+        this.dx = 0;
+        this.dz = 0;
+        this.dy = 0;
     }
     move(){
         let keyMap = this.keyMap;
         const speed = 0.02;
-        const turnSpeed = 0.06;
+        const turnSpeed = 0.08;
 
         if(keyMap[87] == true){
             this.center.translateZ(speed);
@@ -232,12 +236,26 @@ export class Alien extends GrObject{
                     }
                 }
             }
-        } else { // drop a cow
+        } else { 
+            // drop a cow
             if (this.keyMap[81] == true){
                 for (let cow of this.cows){
                     if (cow.state == 1){
                         cow.cow.translateY(-heldHeight);
                         cow.setState(0);
+                        this.carrying = false;
+                    }
+                }
+            }
+            // throw a cow
+            if (this.keyMap[69] == true){
+                for (let cow of this.cows){
+                    if (cow.state == 1){
+                        let facing = new T.Vector3();
+                        this.center.getWorldDirection(facing);
+
+                        cow.setState(2);
+                        cow.throw();
                         this.carrying = false;
                     }
                 }
@@ -305,6 +323,13 @@ export class Cow extends GrObject{
         this.state = state;
     }
 
+    throw(){
+        const upwardForce = .15;
+        const forwardForce = .15;
+        this.dz = forwardForce;
+        this.dy = upwardForce;
+    }
+
     stepWorld(delta){
         if (this.state == 0){ // wandering
 
@@ -346,9 +371,21 @@ export class Cow extends GrObject{
             this.cow.translateZ(delta/5000);
 
         } else if (this.state == 1){ // carried
+            let alienDir = new T.Vector3();
+            this.alien.center.getWorldDirection(alienDir);
+            this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), Math.atan2(alienDir.x, alienDir.z));
             this.cow.position.set(this.alien.center.position.x, heldHeight, this.alien.center.position.z);
         } else if (this.state == 2){ // thrown
-
+            const gravity = -.005;
+            const drag = -.001;
+            this.cow.translateZ(this.dz);
+            this.cow.translateY(this.dy);
+            this.dy += gravity;
+            this.dz += drag;
+            if (this.cow.position.y <= 0){ // hit the ground
+                this.setState(0);
+                this.cow.position.set(this.cow.position.x, 0, this.cow.position.z);
+            }
         } else if (this.state == 3){ // gone
 
         }
