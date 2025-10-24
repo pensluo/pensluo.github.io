@@ -13,9 +13,11 @@ const objLoader = new OBJLoader();
 
 let lumps = textureLoader.load("./assets/noise.png");
 
+const heldHeight = .7;
+
 let alienCount = 0;
 export class Alien extends GrObject{
-    constructor(timeOffset, keyMap){
+    constructor(keyMap, cows){
         let torsoGeo = new T.CylinderGeometry(1,.3,1.4);
         let neckGeo = new T.CylinderGeometry(.1,.15,.5);
         let headGeo = new T.SphereGeometry(1);
@@ -155,15 +157,16 @@ export class Alien extends GrObject{
         this.lHip = leftLegJoint;
         this.rKnee = rightCalfJoint;
         this.lKnee = leftCalfJoint;
-        this.time = timeOffset;
-        this.pathTime = timeOffset;
+        this.time = 0;
 
         this.keyMap = keyMap;
+        this.cows = cows;
+        this.carrying = false;
     }
     move(){
         let keyMap = this.keyMap;
         const speed = 0.02;
-        const turnSpeed = 0.04;
+        const turnSpeed = 0.06;
 
         if(keyMap[87] == true){
             this.center.translateZ(speed);
@@ -210,6 +213,38 @@ export class Alien extends GrObject{
             this.center.position.set(-bound, 0, bound);
         }
     }
+
+    interact(){
+        const cowBound = .5;
+
+        // try to pick up a cow
+        if (this.carrying == false){
+            for (let cow of this.cows){
+                if (cow.state == 0){
+                    const dist = Math.sqrt((this.center.position.x - cow.cow.position.x)*(this.center.position.x - cow.cow.position.x)
+                                +(this.center.position.z - cow.cow.position.z)*(this.center.position.z - cow.cow.position.z));
+                    if (dist < cowBound){
+                        if(this.keyMap[69] == true){
+                            cow.setState(1);
+                            this.carrying = true;
+                            break; // to only pick up one cow at a time
+                        }
+                    }
+                }
+            }
+        } else { // drop a cow
+            if (this.keyMap[81] == true){
+                for (let cow of this.cows){
+                    if (cow.state == 1){
+                        cow.cow.translateY(-heldHeight);
+                        cow.setState(0);
+                        this.carrying = false;
+                    }
+                }
+            }
+        }
+    }
+
     stepWorld(delta){
         this.time += delta/80;
         this.time %= 2*Math.PI;
@@ -230,7 +265,6 @@ export class Alien extends GrObject{
         // fix this line so it only bobs instead of locking us to 0,0
         // this.body.position.set(0,.008*Math.sin(this.time), 0);
         this.move();
-
     }
 }
 
@@ -262,6 +296,15 @@ export class Cow extends GrObject{
         this.cow = cow;
         this.state = 0; // 0 = wandering, 1 = carried, 2 = thrown, 3 = gone
     }
+
+    setAlien(alien){
+        this.alien = alien;
+    }
+
+    setState(state){
+        this.state = state;
+    }
+
     stepWorld(delta){
         if (this.state == 0){ // wandering
 
@@ -303,7 +346,7 @@ export class Cow extends GrObject{
             this.cow.translateZ(delta/5000);
 
         } else if (this.state == 1){ // carried
-
+            this.cow.position.set(this.alien.center.position.x, heldHeight, this.alien.center.position.z);
         } else if (this.state == 2){ // thrown
 
         } else if (this.state == 3){ // gone

@@ -67,25 +67,7 @@ for (let i = -10; i <= 11; i += 7){
   }
 }
 
-// keyboard controls code adapted from 
-// https://stackoverflow.com/questions/29266602/javascript-when-having-pressed-2-keys-simultaneously-down-leaving-one-of-them
-let keyMap = [];
-document.addEventListener("keydown", onDocumentKeyDown, true); 
-document.addEventListener("keyup", onDocumentKeyUp, true);
-
-let alien = new Alien(0, keyMap);
-world.add(alien);
-alien.setPos(0,0,1);
-
-function onDocumentKeyDown(event){ 
-  let keyCode = event.keyCode;
-  keyMap[keyCode] = true;
-}
-function onDocumentKeyUp(event){
-  let keyCode = event.keyCode;
-  keyMap[keyCode] = false;
-}
-
+// cows
 let cows = [];
 let numCows = 20;
 for (let i = 0; i < numCows; i++){
@@ -105,6 +87,31 @@ for (let i = 0; i < numCows; i++){
   world.add(cow);
   cows.push(cow);
 }
+
+// keyboard controls code adapted from 
+// https://stackoverflow.com/questions/29266602/javascript-when-having-pressed-2-keys-simultaneously-down-leaving-one-of-them
+let keyMap = [];
+document.addEventListener("keydown", onDocumentKeyDown, true); 
+document.addEventListener("keyup", onDocumentKeyUp, true);
+
+let alien = new Alien(keyMap, cows);
+world.add(alien);
+alien.setPos(0,0,1);
+
+function onDocumentKeyDown(event){ 
+  let keyCode = event.keyCode;
+  keyMap[keyCode] = true;
+  alien.interact();
+}
+function onDocumentKeyUp(event){
+  let keyCode = event.keyCode;
+  keyMap[keyCode] = false;
+}
+
+for (let cow of cows){
+  cow.setAlien(alien);
+}
+
 
 let saucer = new Saucer(0, textureCube);
 world.add(saucer);
