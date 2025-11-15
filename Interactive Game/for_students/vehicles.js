@@ -163,9 +163,13 @@ export class Alien extends GrObject{
         this.cows = cows;
         this.carrying = false;
 
+        this.caughtCount = 0;
+        this.lostCount = 0;
+
         this.dx = 0;
         this.dz = 0;
         this.dy = 0;
+
     }
     move(){
         let keyMap = this.keyMap;
@@ -262,6 +266,7 @@ export class Alien extends GrObject{
             }
         }
     }
+    
 
     stepWorld(delta){
         this.time += delta/80;
@@ -339,8 +344,8 @@ export class Cow extends GrObject{
                 this.cow.rotateOnWorldAxis(new T.Vector3(0,1,0),change);
             }
 
-            let x = this.cow.position.x;
-            let z = this.cow.position.z;
+            const x = this.cow.position.x;
+            const z = this.cow.position.z;
 
             // stay inside the fence
             const bound = 6;
@@ -375,6 +380,15 @@ export class Cow extends GrObject{
             this.alien.center.getWorldDirection(alienDir);
             this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), Math.atan2(alienDir.x, alienDir.z));
             this.cow.position.set(this.alien.center.position.x, heldHeight, this.alien.center.position.z);
+            // check if it collided with the beam
+            const dist = Math.sqrt(this.cow.position.x*this.cow.position.x + this.cow.position.z*this.cow.position.z);
+            const beamWidth = .7;
+            if (dist < beamWidth){
+                this.setState(3);
+                this.alien.carrying = false;
+                this.alien.caughtCount++;
+                this.cow.position.set(0,this.cow.position.y,0);
+            }
         } else if (this.state == 2){ // thrown
             const gravity = -.005;
             const drag = -.001;
@@ -382,13 +396,34 @@ export class Cow extends GrObject{
             this.cow.translateY(this.dy);
             this.dy += gravity;
             this.dz += drag;
-            if (this.cow.position.y <= 0){ // hit the ground
-                this.setState(0);
-                this.cow.position.set(this.cow.position.x, 0, this.cow.position.z);
+            // check if it collided with the beam
+            const dist = Math.sqrt(this.cow.position.x*this.cow.position.x + this.cow.position.z*this.cow.position.z);
+            const beamWidth = .7;
+            if (dist < beamWidth){
+                this.setState(3);
+                this.alien.caughtCount++;
+                this.cow.position.set(0,this.cow.position.y,0);
             }
-        } else if (this.state == 3){ // gone
-
+            if (this.cow.position.y <= 0){ // hit the ground
+                const bound = 6;
+                if ((Math.abs(this.cow.position.x) > bound)||(Math.abs(this.cow.position.z) > bound)){ // outside of the fence
+                    this.setState(4);
+                    this.alien.lostCount++;
+                    this.cow.position.set(0, -3, 0);
+                } else { // inside the fence
+                    this.setState(0);
+                    this.cow.position.set(this.cow.position.x, 0, this.cow.position.z);
+                }
+            }
+        } else if (this.state == 3){ // getting abducted
+            if (this.cow.position.y >= 6){
+                this.setState(4);
+            } else {
+                this.cow.translateY(delta/1000);
+            }
+        } else if (this.state == 4){ // gone
         }
+        
     }
 }
 

@@ -3,11 +3,129 @@
 
 import * as T from "../libs/CS559-Three/build/three.module.js";
 import { GrObject } from "../libs/CS559-Framework/GrObject.js";
+import { FontLoader } from "../libs/CS559-Three/examples/jsm/loaders/FontLoader.js";
+import * as Text2D from "../libs/CS559-Three/examples/jsm/webxr/Text2D.js";
 
 let loader = new T.TextureLoader();
 let fieldtex = loader.load("./assets/field.png");
 let fieldtex2 = loader.load("./assets/field2.png");
 let fieldtex3 = loader.load("./assets/field3.png");
+
+let textCount = 0;
+export class Text extends GrObject {
+    constructor(camera, alien){
+        let center = new T.Group();
+
+        let mesh0 = Text2D.createText("You are the alien. Move with WASD.", .004);  
+        // set where the text appears on the screen
+        center.add(mesh0);
+        mesh0.translateZ(-.1);
+        mesh0.translateX(-.02);
+        mesh0.translateY(.036);
+
+        let mesh1 = Text2D.createText("Move near a cow, and pick it up with E.", .004);  
+        // set where the text appears on the screen
+        center.add(mesh1);
+        mesh1.translateZ(-.1);
+        mesh1.translateX(-.018);
+        mesh1.translateY(.031);
+
+        let mesh2 = Text2D.createText("You can drop it with Q, or throw it by pressing E again.", .004);  
+        // set where the text appears on the screen
+        center.add(mesh2);
+        mesh2.translateZ(-.1);
+        mesh2.translateX(-.005);
+        mesh2.translateY(.036);
+
+        let mesh3 = Text2D.createText("Try to carry or throw all the cows to the spaceship.", .004);  
+        // set where the text appears on the screen
+        center.add(mesh3);
+        mesh3.translateZ(-.1);
+        mesh3.translateX(-.008);
+        mesh3.translateY(.036);
+
+        let mesh4 = Text2D.createText("Try not to let any escape the fence!", .004);  
+        // set where the text appears on the screen
+        center.add(mesh4);
+        mesh4.translateZ(-.1);
+        mesh4.translateX(-.021);
+        mesh4.translateY(.031);
+
+        let meshCounter = Text2D.createText("placeholder", .004);  
+        // set where the text appears on the screen
+        center.add(meshCounter);
+        meshCounter.translateZ(-.1);
+        meshCounter.translateY(.036);
+
+
+        super(`Text-${++textCount}`, center);
+        this.alien = alien;
+        this.cam = camera;
+        this.hud = center;
+        this.text0 = mesh0;
+        this.text1 = mesh1;
+        this.text2 = mesh2;
+        this.text3 = mesh3;
+        this.text4 = mesh4;
+        this.textCounter = meshCounter;
+
+        this.interactCount = 0;
+        this.wasCarrying = false;
+        this.updateTimer = 0;
+    }
+    updateCounter(caught, lost){
+        let newCounter = Text2D.createText(caught + " cow(s) abducted, " + lost + " cow(s) escaped", .004);  
+        newCounter.translateZ(-.1);
+        newCounter.translateY(.036);
+
+        this.hud.remove(this.textCounter);
+        this.hud.add(newCounter);
+        this.textCounter = newCounter;
+    }
+    stepWorld(delta){
+        // update the text that displays how many cows are caught
+        // this is costly (must create a whole new text object), so only do it once every second
+        this.updateTimer += delta;
+        if ((this.interactCount > 2) && (this.updateTimer > 1000)){
+            this.updateCounter(this.alien.caughtCount, this.alien.lostCount);
+            this.updateTimer = 0;
+        }
+
+        // update the text so it's in the same spot relative to the camera
+        this.hud.position.set(this.cam.position.x, this.cam.position.y, this.cam.position.z);
+        this.hud.setRotationFromEuler(this.cam.rotation);
+        console.log(this.interactCount);
+
+        // keep track of how many times the player has interacted with a cow to control which text is shown
+        if (this.wasCarrying != this.alien.carrying){
+            this.wasCarrying = !this.wasCarrying;
+            this.interactCount++;
+        }
+
+        // change which text is shown
+        if (this.interactCount == 0){
+            this.text0.visible = true;
+            this.text1.visible = true;
+            this.text2.visible = false;
+            this.text3.visible = false;
+            this.text4.visible = false;
+            this.textCounter.visible = false;
+        } else if (this.interactCount == 1){
+            this.text0.visible = false;
+            this.text1.visible = false;
+            this.text2.visible = true;
+        } else if (this.interactCount == 2){
+            this.text2.visible = false;
+            this.text3.visible = true;
+            this.text4.visible = true;
+        } else if (this.interactCount > 2){
+            this.text3.visible = false;
+            this.text4.visible = false;
+            this.textCounter.visible = true;
+        }
+
+    }
+}
 
 let fenceCount = 0;
 export class Fence extends GrObject {

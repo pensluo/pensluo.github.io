@@ -11,7 +11,7 @@
 import { GrWorld } from "../libs/CS559-Framework/GrWorld.js";
 import { WorldUI } from "../libs/CS559-Framework/WorldUI.js";
 import * as T from "../libs/CS559-Three/build/three.module.js";
-import { Fence, WheatField, Fireflies } from "./buildings.js";
+import { Fence, WheatField, Fireflies, Text } from "./buildings.js";
 import { Alien, Cow, Saucer } from "./vehicles.js";
 
 let numInput = /** @type {HTMLInputElement} */ (document.getElementById("numInput"));
@@ -111,6 +111,9 @@ function onDocumentKeyUp(event){
 for (let cow of cows){
   cow.setAlien(alien);
 }
+
+let text = new Text(world.active_camera, alien);
+world.add(text);
 
 
 let saucer = new Saucer(0, textureCube);
