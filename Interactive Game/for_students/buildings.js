@@ -51,12 +51,17 @@ export class Text extends GrObject {
         mesh4.translateX(-.021);
         mesh4.translateY(.031);
 
-        let meshCounter = Text2D.createText("placeholder", .004);  
+        let meshCounter = Text2D.createText(" ", .004);  
         // set where the text appears on the screen
         center.add(meshCounter);
         meshCounter.translateZ(-.1);
         meshCounter.translateY(.036);
 
+        let meshEnd = Text2D.createText("No more cows remaining!", .004);  
+        // set where the text appears on the screen
+        center.add(meshEnd);
+        meshEnd.translateZ(-.1);
+        meshEnd.translateY(.036);
 
         super(`Text-${++textCount}`, center);
         this.alien = alien;
@@ -68,10 +73,13 @@ export class Text extends GrObject {
         this.text3 = mesh3;
         this.text4 = mesh4;
         this.textCounter = meshCounter;
+        this.textEnd = meshEnd;
 
         this.interactCount = 0;
         this.wasCarrying = false;
         this.updateTimer = 0;
+        this.globalTimer = 0;
+        this.finishedFlag = false;
     }
     updateCounter(caught, lost){
         let newCounter = Text2D.createText(caught + " cow(s) abducted, " + lost + " cow(s) escaped", .004);  
@@ -82,7 +90,17 @@ export class Text extends GrObject {
         this.hud.add(newCounter);
         this.textCounter = newCounter;
     }
+    tallyResults(caught, lost, time){
+        const total = caught + lost;
+        const timeInSec = time/1000;
+        let resultsText = Text2D.createText("You abducted " + caught + " out of " + total + " cows in " + timeInSec + " seconds!", .004);  
+        resultsText.translateZ(-.1);
+        resultsText.translateY(.031);
+
+        this.hud.add(resultsText);
+    }
     stepWorld(delta){
+        this.globalTimer += delta;
         // update the text that displays how many cows are caught
         // this is costly (must create a whole new text object), so only do it once every second
         this.updateTimer += delta;
@@ -103,13 +121,18 @@ export class Text extends GrObject {
         }
 
         // change which text is shown
-        if (this.interactCount == 0){
+        if (this.finishedFlag == true){
+            this.textCounter.visible = false;
+        } else if (this.interactCount == 0){
             this.text0.visible = true;
             this.text1.visible = true;
             this.text2.visible = false;
             this.text3.visible = false;
             this.text4.visible = false;
             this.textCounter.visible = false;
+            this.textEnd.visible = false;
+
+            this.globalTimer = 0;
         } else if (this.interactCount == 1){
             this.text0.visible = false;
             this.text1.visible = false;
@@ -122,6 +145,14 @@ export class Text extends GrObject {
             this.text3.visible = false;
             this.text4.visible = false;
             this.textCounter.visible = true;
+
+            // 20 is the total number of cows. ideally this would be defined somewhere else
+            if ((this.alien.caughtCount + this.alien.lostCount) >= 20 && this.finishedFlag == false){
+                this.textCounter.visible = false;
+                this.textEnd.visible = true;
+                this.tallyResults(this.alien.caughtCount, this.alien.lostCount, this.globalTimer);
+                this.finishedFlag = true;
+            }
         }
 
     }
