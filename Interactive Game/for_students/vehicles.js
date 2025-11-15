@@ -178,15 +178,22 @@ export class Alien extends GrObject{
 
         if(keyMap[87] == true){
             this.center.translateZ(speed);
+            this.animate();
         }
         if(keyMap[83] == true){
             this.center.translateZ(-speed);
+            this.animate();
         }
         if(keyMap[65] == true){
             this.center.rotateY(turnSpeed);
+            this.animate();
         }
         if(keyMap[68] == true){
             this.center.rotateY(-turnSpeed);
+            this.animate();
+        }
+        if (!keyMap[87] && !keyMap[83] && !keyMap[65] && !keyMap[68]){
+            this.idlePose();
         }
 
         // collision with fence
@@ -266,27 +273,47 @@ export class Alien extends GrObject{
             }
         }
     }
+
+    idlePose(){
+        const x = new T.Vector3(1,0,0);
+
+        this.rHip.setRotationFromAxisAngle(x,-Math.PI/12);
+        this.rKnee.setRotationFromAxisAngle(x,Math.PI/6);
+
+        this.lHip.setRotationFromAxisAngle(x,-Math.PI/12);
+        this.lKnee.setRotationFromAxisAngle(x,Math.PI/6);
+
+        this.rShoulder.setRotationFromAxisAngle(x,-Math.PI/16);
+        this.rElbow.setRotationFromAxisAngle(x,-Math.PI/10);
+        this.rElbow.rotateZ(-Math.PI/10);
+
+        this.lShoulder.setRotationFromAxisAngle(x,Math.PI/16);
+        this.lElbow.setRotationFromAxisAngle(x,-Math.PI/10);
+        this.lElbow.rotateZ(Math.PI/10);
+    }
     
+    animate(){
+        const x = new T.Vector3(1,0,0);
+
+        this.rHip.setRotationFromAxisAngle(x,.5*Math.sin(this.time));
+        this.rKnee.setRotationFromAxisAngle(x,.5+.5*Math.sin(this.time));
+
+        this.lHip.setRotationFromAxisAngle(x,.5*Math.sin(Math.PI+this.time));
+        this.lKnee.setRotationFromAxisAngle(x,.5+.5*Math.sin(Math.PI+this.time));
+
+        this.rShoulder.setRotationFromAxisAngle(x,.5*Math.sin(Math.PI+this.time));
+        this.rElbow.setRotationFromAxisAngle(x,-.5+.5*Math.sin(Math.PI+this.time));
+
+        this.lShoulder.setRotationFromAxisAngle(x,.5*Math.sin(this.time));
+        this.lElbow.setRotationFromAxisAngle(x,-.5+.5*Math.sin(this.time));
+
+        this.body.position.set(0,.008*Math.sin(this.time), 0);
+    }
 
     stepWorld(delta){
         this.time += delta/80;
         this.time %= 2*Math.PI;
 
-        //animating arms and legs
-        this.rHip.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(this.time));
-        this.rKnee.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5+.5*Math.sin(this.time));
-
-        this.lHip.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(Math.PI+this.time));
-        this.lKnee.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5+.5*Math.sin(Math.PI+this.time));
-
-        this.rShoulder.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(Math.PI+this.time));
-        this.rElbow.setRotationFromAxisAngle(new T.Vector3(1,0,0),-.5+.5*Math.sin(Math.PI+this.time));
-
-        this.lShoulder.setRotationFromAxisAngle(new T.Vector3(1,0,0),.5*Math.sin(this.time));
-        this.lElbow.setRotationFromAxisAngle(new T.Vector3(1,0,0),-.5+.5*Math.sin(this.time));
-
-        // fix this line so it only bobs instead of locking us to 0,0
-        // this.body.position.set(0,.008*Math.sin(this.time), 0);
         this.move();
     }
 }

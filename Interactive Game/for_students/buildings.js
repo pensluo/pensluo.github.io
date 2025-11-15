@@ -3,7 +3,6 @@
 
 import * as T from "../libs/CS559-Three/build/three.module.js";
 import { GrObject } from "../libs/CS559-Framework/GrObject.js";
-import { FontLoader } from "../libs/CS559-Three/examples/jsm/loaders/FontLoader.js";
 import * as Text2D from "../libs/CS559-Three/examples/jsm/webxr/Text2D.js";
 
 let loader = new T.TextureLoader();
