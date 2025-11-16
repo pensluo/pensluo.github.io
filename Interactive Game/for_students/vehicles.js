@@ -6,18 +6,20 @@ import { GrObject } from "../libs/CS559-Framework/GrObject.js";
 import { OBJLoader } from "../libs/CS559-Three/examples/jsm/loaders/OBJLoader.js";
 import { shaderMaterial } from "../libs/CS559-Framework/shaderHelper.js";
 
-// get our inputs from the html page
-
 const textureLoader = new T.TextureLoader();
 const objLoader = new OBJLoader();
 
 let lumps = textureLoader.load("./assets/noise.png");
 
+// height at which the alien holds the cows above its head
 const heldHeight = .7;
 
+// The alien that is controlled by the player
 let alienCount = 0;
 export class Alien extends GrObject{
     constructor(keyMap, cows){
+        // Create the alien's body out of many primitives
+
         let torsoGeo = new T.CylinderGeometry(1,.3,1.4);
         let neckGeo = new T.CylinderGeometry(.1,.15,.5);
         let headGeo = new T.SphereGeometry(1);
@@ -146,6 +148,8 @@ export class Alien extends GrObject{
 
         group.scale.set(.12,.12,.12);
         super(`Alien-${++alienCount}`, center);
+
+        // fields for animating the alien's body
         this.center = center;
         this.body = group;
         this.neck = headJoint;
@@ -159,18 +163,16 @@ export class Alien extends GrObject{
         this.lKnee = leftCalfJoint;
         this.time = 0;
 
+        // fields for controlling movement, interaction, and state
         this.keyMap = keyMap;
         this.cows = cows;
         this.carrying = false;
 
         this.caughtCount = 0;
         this.lostCount = 0;
-
-        this.dx = 0;
-        this.dz = 0;
-        this.dy = 0;
-
     }
+
+    // Call this every frame to keep movement smooth. Move the alien based on whatever keys are currently pressed.
     move(){
         let keyMap = this.keyMap;
         const speed = 0.02;
@@ -196,12 +198,13 @@ export class Alien extends GrObject{
             this.idlePose();
         }
 
-        // collision with fence
+        // Handle collision with the fence
+
         let x = this.center.position.x;
         let z = this.center.position.z;
 
         const bound = 6.5;
-        // edges
+        // If we're outside the edges, push us back in
         if (x < -bound){
             this.center.position.set(-bound, 0, z);
         }
@@ -214,7 +217,7 @@ export class Alien extends GrObject{
         if (z > bound){
             this.center.position.set(x, 0, bound);
         }
-        // corners
+        // This stops us from squeezing out through the corners of the bounding area
         if (x < -bound && z < -bound){
             this.center.position.set(-bound, 0, -bound);
         }
@@ -229,29 +232,34 @@ export class Alien extends GrObject{
         }
     }
 
+    // Called at the exact time of button presses, NOT continuously like move() is.
+    // Handles the actions of picking up, dropping, and throwing cows
     interact(){
-        const cowBound = .5;
+        const cowBound = .5; // how far away we need to be from a cow to pick it up
 
         // try to pick up a cow
         if (this.carrying == false){
             for (let cow of this.cows){
-                if (cow.state == 0){
+                if (cow.state == 0){ // only pick up a cow if its wandering
                     const dist = Math.sqrt((this.center.position.x - cow.cow.position.x)*(this.center.position.x - cow.cow.position.x)
                                 +(this.center.position.z - cow.cow.position.z)*(this.center.position.z - cow.cow.position.z));
                     if (dist < cowBound){
                         if(this.keyMap[69] == true){
+                            // make the cow know that it's being carried,
+                            // and make the alien know that it's carrying something
                             cow.setState(1);
                             this.carrying = true;
-                            break; // to only pick up one cow at a time
+                            break; // exit the loop so that we can only pick up 1 cow per button press
                         }
                     }
                 }
             }
+        // We are currently carrying something
         } else { 
             // drop a cow
             if (this.keyMap[81] == true){
                 for (let cow of this.cows){
-                    if (cow.state == 1){
+                    if (cow.state == 1){ // pick out the cow that's in state 1 (being carried)
                         cow.cow.translateY(-heldHeight);
                         cow.setState(0);
                         this.carrying = false;
@@ -261,10 +269,7 @@ export class Alien extends GrObject{
             // throw a cow
             if (this.keyMap[69] == true){
                 for (let cow of this.cows){
-                    if (cow.state == 1){
-                        let facing = new T.Vector3();
-                        this.center.getWorldDirection(facing);
-
+                    if (cow.state == 1){ // pick out the carried cow
                         cow.setState(2);
                         cow.throw();
                         this.carrying = false;
@@ -274,6 +279,8 @@ export class Alien extends GrObject{
         }
     }
 
+    // Called whenever none of the movement keys are being pressed.
+    // Puts the alien in a static idle pose
     idlePose(){
         const x = new T.Vector3(1,0,0);
 
@@ -292,6 +299,8 @@ export class Alien extends GrObject{
         this.lElbow.rotateZ(Math.PI/10);
     }
     
+    // Called when at least one of the movement keys are being pressed.
+    // Animates the alien's limbs using trig functions so it looks like it's walking
     animate(){
         const x = new T.Vector3(1,0,0);
 
@@ -307,17 +316,21 @@ export class Alien extends GrObject{
         this.lShoulder.setRotationFromAxisAngle(x,.5*Math.sin(this.time));
         this.lElbow.setRotationFromAxisAngle(x,-.5+.5*Math.sin(this.time));
 
+        // Makes its body slightly bob up and down
         this.body.position.set(0,.008*Math.sin(this.time), 0);
     }
 
+    // Called by the GrWorld every frame
     stepWorld(delta){
+        // update this.time, which is used for animate()
         this.time += delta/80;
         this.time %= 2*Math.PI;
-
+        // Try to walk around if movement keys are pressed
         this.move();
     }
 }
 
+// Load the cow's model and texture
 let cowTex = textureLoader.load("./assets/spot_texture.png");
 let cowObj = await objLoader.loadAsync("./assets/spot_triangulated.obj");
 
@@ -327,6 +340,7 @@ cowObj.traverse(function (child) {
     }
 } );
 
+// The cows, which the alien can interact with
 let cowCount = 0;
 export class Cow extends GrObject{  
     constructor(xpos, zpos, theta){ 
@@ -344,37 +358,46 @@ export class Cow extends GrObject{
         cow.rotateY(theta);
 
         this.cow = cow;
-        this.state = 0; // 0 = wandering, 1 = carried, 2 = thrown, 3 = gone
+
+        // Each cow keeps track of its state, which determines its behavior every frame
+        this.state = 0; // 0 = wandering, 1 = carried, 2 = thrown, 3 = being abducted, 4 = gone from the scene
     }
 
+    // Used to pass the alien to the cow
+    // I use a function instead of the constructor to do this because the alien doesn't exist yet
+    // when the cows are being created.
     setAlien(alien){
         this.alien = alien;
     }
 
+    // It's not necessary to have this be a function, but it keeps things a little neater
     setState(state){
         this.state = state;
     }
 
+    // Called by the alien when it throws a cow. Gives the cow a burst of upward and forward velocity.
     throw(){
         const upwardForce = .15;
         const forwardForce = .15;
+
         this.dz = forwardForce;
         this.dy = upwardForce;
     }
 
+    // Called by the GrWorld every frame
     stepWorld(delta){
         if (this.state == 0){ // wandering
 
-            let randomDraw = Math.floor(50 * Math.random()); // 1 in 50 chance to turn slightly
+            let randomDraw = Math.floor(50 * Math.random()); // 1 in 50 chance to turn slightly every frame
             if (randomDraw == 0){
-                let change = .3 - .6 * Math.random(); // change size: +-.3
+                let change = .3 - .6 * Math.random(); // change magnitude: +-.3
                 this.cow.rotateOnWorldAxis(new T.Vector3(0,1,0),change);
             }
 
             const x = this.cow.position.x;
             const z = this.cow.position.z;
 
-            // stay inside the fence
+            // Stay inside the fence
             const bound = 6;
             if (x < -bound){
                 this.cow.position.set(-bound, 0, z);
@@ -392,22 +415,27 @@ export class Cow extends GrObject{
                 this.cow.rotateOnAxis(new T.Vector3(0,1,0),Math.PI);
             }
 
-            // stay away from beam
+            // Stay away from the beam
             const beamWidth = 2;
             const dist = Math.sqrt(x*x + z*z);
             if (dist <= beamWidth){
+                // if too close to the center of the map, turn away from the center and walk away
                 const dir = Math.atan2(x, z);
                 this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), dir);
             }
             
+            // Move forward this much every frame
             this.cow.translateZ(delta/5000);
 
-        } else if (this.state == 1){ // carried
+        } else if (this.state == 1){ // carried by the alien
+            // Turn the cow so it's facing in the same direction as the alien
             let alienDir = new T.Vector3();
             this.alien.center.getWorldDirection(alienDir);
             this.cow.setRotationFromAxisAngle(new T.Vector3(0,1,0), Math.atan2(alienDir.x, alienDir.z));
+            // Place it above the alien's head
             this.cow.position.set(this.alien.center.position.x, heldHeight, this.alien.center.position.z);
-            // check if it collided with the beam
+
+            // check if this cow was carried into the beam
             const dist = Math.sqrt(this.cow.position.x*this.cow.position.x + this.cow.position.z*this.cow.position.z);
             const beamWidth = .7;
             if (dist < beamWidth){
@@ -416,14 +444,19 @@ export class Cow extends GrObject{
                 this.alien.caughtCount++;
                 this.cow.position.set(0,this.cow.position.y,0);
             }
+
         } else if (this.state == 2){ // thrown
             const gravity = -.005;
             const drag = -.001;
+
+            // Move the cow based on its velocity
             this.cow.translateZ(this.dz);
             this.cow.translateY(this.dy);
+            // Change its velocity based on gravity and drag
             this.dy += gravity;
             this.dz += drag;
-            // check if it collided with the beam
+
+            // check if the cow collided with the beam
             const dist = Math.sqrt(this.cow.position.x*this.cow.position.x + this.cow.position.z*this.cow.position.z);
             const beamWidth = .7;
             if (dist < beamWidth){
@@ -431,28 +464,33 @@ export class Cow extends GrObject{
                 this.alien.caughtCount++;
                 this.cow.position.set(0,this.cow.position.y,0);
             }
+
             if (this.cow.position.y <= 0){ // hit the ground
                 const bound = 6;
-                if ((Math.abs(this.cow.position.x) > bound)||(Math.abs(this.cow.position.z) > bound)){ // outside of the fence
+                if ((Math.abs(this.cow.position.x) > bound)||(Math.abs(this.cow.position.z) > bound)){ // hit the ground outside of the fence, go to "gone" state
                     this.setState(4);
                     this.alien.lostCount++;
+                    // stick it under the map so we can't see it anymore
                     this.cow.position.set(0, -3, 0);
-                } else { // inside the fence
+                } else { // hit the ground inside the fence, return to wandering state
                     this.setState(0);
                     this.cow.position.set(this.cow.position.x, 0, this.cow.position.z);
                 }
             }
         } else if (this.state == 3){ // getting abducted
-            if (this.cow.position.y >= 6){
+            if (this.cow.position.y >= 6){ // reached the top of the beam, go to "gone" state
                 this.setState(4);
-            } else {
+            } else { // get sucked upwards by the beam
                 this.cow.translateY(delta/1000);
             }
         } else if (this.state == 4){ // gone
+            // do nothing!
         }
         
     }
 }
+
+// The flying saucer is just a decoration, it doesn't have any effect on the game!
 
 let saucerCount = 0;
 export class Saucer extends GrObject{

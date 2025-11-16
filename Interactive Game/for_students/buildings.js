@@ -3,6 +3,7 @@
 
 import * as T from "../libs/CS559-Three/build/three.module.js";
 import { GrObject } from "../libs/CS559-Framework/GrObject.js";
+
 import * as Text2D from "../libs/CS559-Three/examples/jsm/webxr/Text2D.js";
 
 let loader = new T.TextureLoader();
@@ -10,9 +11,12 @@ let fieldtex = loader.load("./assets/field.png");
 let fieldtex2 = loader.load("./assets/field2.png");
 let fieldtex3 = loader.load("./assets/field3.png");
 
+// Text that updates based on the state of the game
 let textCount = 0;
 export class Text extends GrObject {
     constructor(camera, alien){
+        // "center" will be at the exact same point as the camera at all times
+        // text objects will be added to it and offset slightly so that they're visible on the screen
         let center = new T.Group();
 
         let mesh0 = Text2D.createText("You are the alien. Move with WASD.", .004);  
@@ -63,8 +67,13 @@ export class Text extends GrObject {
         meshEnd.translateY(.036);
 
         super(`Text-${++textCount}`, center);
+
+        // update text based on the alien, and update position/rotation based on the camera
         this.alien = alien;
         this.cam = camera;
+
+        // all of the different text objects that can appear on the screen
+        // control which ones are visible at any given time in stepWorld()
         this.hud = center;
         this.text0 = mesh0;
         this.text1 = mesh1;
@@ -74,21 +83,29 @@ export class Text extends GrObject {
         this.textCounter = meshCounter;
         this.textEnd = meshEnd;
 
-        this.interactCount = 0;
-        this.wasCarrying = false;
-        this.updateTimer = 0;
-        this.globalTimer = 0;
-        this.finishedFlag = false;
+        // fields for controlling which text is on screen
+        this.interactCount = 0; // how many times the alien has interacted with a cow
+        this.wasCarrying = false; // used for updating interactCount
+        this.updateTimer = 0; // timer to control when we update the score text. more information below
+        this.globalTimer = 0; // timer that starts when the first cow is interacted with. displayed to the user on the end screen
+        this.finishedFlag = false; // keeps track of if all the cows are gone
     }
+
+    // Updates the "score counter" text so it changes based on how many cows were caught / lost
+    // The text in a Text2D object can't be changed, so we have to make a new object every time we update
+    // This is costly, so it's done on a timer instead of every frame.
     updateCounter(caught, lost){
         let newCounter = Text2D.createText(caught + " cow(s) abducted, " + lost + " cow(s) escaped", .004);  
         newCounter.translateZ(-.1);
         newCounter.translateY(.036);
 
+        // remember to remove the old counter so we don't end up with lots of objects!
         this.hud.remove(this.textCounter);
         this.hud.add(newCounter);
         this.textCounter = newCounter;
     }
+
+    // Called once the player has collected/lost all the cows. Creates a new text object that shows the results.
     tallyResults(caught, lost, time){
         const total = caught + lost;
         const timeInSec = time/1000;
@@ -98,8 +115,12 @@ export class Text extends GrObject {
 
         this.hud.add(resultsText);
     }
+
+    // Called every frame by the GrWorld
     stepWorld(delta){
+        // update the timer that will be shown to the player when they finish
         this.globalTimer += delta;
+
         // update the text that displays how many cows are caught
         // this is costly (must create a whole new text object), so only do it once every second
         this.updateTimer += delta;
@@ -119,10 +140,10 @@ export class Text extends GrObject {
             this.interactCount++;
         }
 
-        // change which text is shown
-        if (this.finishedFlag == true){
+        // change which text is shown based on interactCount, finishedFlag, and the number of cows caught/lost
+        if (this.finishedFlag == true){ // all cows are gone, player is finished
             this.textCounter.visible = false;
-        } else if (this.interactCount == 0){
+        } else if (this.interactCount == 0){ // tell the player the movement controls
             this.text0.visible = true;
             this.text1.visible = true;
             this.text2.visible = false;
@@ -131,21 +152,24 @@ export class Text extends GrObject {
             this.textCounter.visible = false;
             this.textEnd.visible = false;
 
+            // before the player has picked up any cows, stop the global timer from updating
+            // so they can have time to figure out how to move first!
             this.globalTimer = 0;
-        } else if (this.interactCount == 1){
+        } else if (this.interactCount == 1){ // tell the player how to drop/throw
             this.text0.visible = false;
             this.text1.visible = false;
             this.text2.visible = true;
-        } else if (this.interactCount == 2){
+        } else if (this.interactCount == 2){ // tell the player the goal of the game
             this.text2.visible = false;
             this.text3.visible = true;
             this.text4.visible = true;
-        } else if (this.interactCount > 2){
+        } else if (this.interactCount > 2){ // show the player's current score
             this.text3.visible = false;
             this.text4.visible = false;
             this.textCounter.visible = true;
 
-            // 20 is the total number of cows. ideally this would be defined somewhere else
+            // the player has collected/lost all the cows. make the end text visible and set the finishedFlag
+            // 20 is the total number of cows. ideally this would be defined in a more global place
             if ((this.alien.caughtCount + this.alien.lostCount) >= 20 && this.finishedFlag == false){
                 this.textCounter.visible = false;
                 this.textEnd.visible = true;
@@ -156,6 +180,8 @@ export class Text extends GrObject {
 
     }
 }
+
+// All the objects below here are just decorations! They don't affect the game at all.
 
 let fenceCount = 0;
 export class Fence extends GrObject {

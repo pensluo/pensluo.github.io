@@ -33,6 +33,7 @@ let world = new GrWorld({
     lightBrightness: 0,
 });
 
+// add skybox
 const skyboxLoader = new T.CubeTextureLoader();
 const textureCube = skyboxLoader.load( [
   './assets/px.png', './assets/nx.png',
@@ -40,6 +41,12 @@ const textureCube = skyboxLoader.load( [
   './assets/pz.png', './assets/nz.png'
 ] );
 world.scene.background = textureCube;
+
+// add decorations to the world
+
+let saucer = new Saucer(0, textureCube);
+world.add(saucer);
+saucer.setPos(0,6,0);
 
 let fireflies1 = new Fireflies(0);
 world.add(fireflies1);
@@ -67,15 +74,16 @@ for (let i = -10; i <= 11; i += 7){
   }
 }
 
-// cows
+// add the cows
 let cows = [];
 let numCows = 20;
 for (let i = 0; i < numCows; i++){
+  // put them in a radom location inside the bounds of the area
   let x = 12*Math.random()-6;
   let z = 12*Math.random()-6;
   let theta = 2*Math.PI*Math.random();
 
-  // don't spawn in center beam
+  // don't spawn them inside the beam
   let dist = Math.sqrt(x*x + z*z);
   while (dist <= 2){
     x = 12*Math.random()-6;
@@ -88,12 +96,13 @@ for (let i = 0; i < numCows; i++){
   cows.push(cow);
 }
 
-// keyboard controls code adapted from 
+// keyboard movement controls code adapted from 
 // https://stackoverflow.com/questions/29266602/javascript-when-having-pressed-2-keys-simultaneously-down-leaving-one-of-them
 let keyMap = [];
 document.addEventListener("keydown", onDocumentKeyDown, true); 
 document.addEventListener("keyup", onDocumentKeyUp, true);
 
+// pass the cows to the alien so that they can interact with each other
 let alien = new Alien(keyMap, cows);
 world.add(alien);
 alien.setPos(0,0,1);
@@ -101,25 +110,23 @@ alien.setPos(0,0,1);
 function onDocumentKeyDown(event){ 
   let keyCode = event.keyCode;
   keyMap[keyCode] = true;
-  alien.interact();
+  alien.interact(); // handles picking up / throwing behavior at the moment of the key press
 }
 function onDocumentKeyUp(event){
   let keyCode = event.keyCode;
   keyMap[keyCode] = false;
 }
 
+// pass the alien to the cows so they can interact with each other
 for (let cow of cows){
   cow.setAlien(alien);
 }
 
+// add text. pass the alien to the text so the text can update based on the alien
 let text = new Text(world.active_camera, alien);
 world.add(text);
 
-
-let saucer = new Saucer(0, textureCube);
-world.add(saucer);
-saucer.setPos(0,6,0);
-
+// add ground texture
 let lumps = new T.TextureLoader().load("./assets/noisehd.png");
 lumps.wrapS = T.RepeatWrapping;
 lumps.wrapT = T.RepeatWrapping;
@@ -127,6 +134,7 @@ lumps.repeat.set(8,8);
 world.groundplane.material.map = lumps;
 world.groundplane.material.normalMap = lumps;
 
+// add lighting
 let moonlight = new T.DirectionalLight("white", .2);
 moonlight.shadow.camera.scale.set(5,5,5);
 moonlight.position.set(20,20,20);
